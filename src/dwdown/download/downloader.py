@@ -25,7 +25,7 @@ class DWDDownloader:
             url: str,
             restart_failed_downloads: bool = False,
             log_downloads: bool = True,
-            delay: int | float = None,
+            delay: int | float | None = None,
             workers: int = 1,
             download_path: str = "downloaded_files",
             log_files_path: str = "log_files_DWDDownloader",
@@ -126,7 +126,7 @@ class DWDDownloader:
 
     def get_data_dates(
             self,
-            url: str = None
+            url: str | None = None
     ) -> tuple[datetime, datetime]:
         """
         Fetches and processes date strings from a given URL.
@@ -203,8 +203,8 @@ class DWDDownloader:
             filenames: list[str],
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".bz2",
-            include_pattern: list[str] = None,
-            exclude_pattern: list[str] = None
+            include_pattern: list[str] | None = None,
+            exclude_pattern: list[str] | None = None
     ) -> list[str]:
         """
         Filters the list of filenames based on the given start and end patterns
@@ -245,9 +245,9 @@ class DWDDownloader:
 
     @staticmethod
     def _process_timestamps(
-            min_timestamp: str | int = None,
-            max_timestamp: str | int = None,
-            include_pattern: list = None
+            min_timestamp: str | int | None = None,
+            max_timestamp: str | int | None = None,
+            include_pattern: list | None = None
     ) -> list[str]:
         """
         Generates a list of formatted timestamp patterns within a given range.
@@ -289,10 +289,10 @@ class DWDDownloader:
             self,
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".bz2",
-            include_pattern: list[str] = None,
-            exclude_pattern: list[str] = None,
-            min_timestamp: str | int = None,
-            max_timestamp: str | int = None,
+            include_pattern: list[str] | None = None,
+            exclude_pattern: list[str] | None = None,
+            min_timestamp: str | int | None = None,
+            max_timestamp: str | int | None = None,
     ) -> list[str]:
         """
         Main method to get all the download links after filtering filenames.
@@ -620,7 +620,7 @@ class MinioDownloader:
     def download_bucket(
             self,
             bucket_name: str,
-            folder_prefix: str = None
+            folder_prefix: str | None = None
     ) -> None:
         """Recursively downloads a bucket or folder from MinIO."""
         self._ensure_bucket(bucket_name)

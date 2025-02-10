@@ -298,8 +298,8 @@ class DataProcessor:
             self,
             name_startswith: str = "",
             name_endswith: str = "",
-            include_pattern: list[str] = None,
-            exclude_pattern: list[str] = None,
+            include_pattern: list[str] | None = None,
+            exclude_pattern: list[str] | None = None,
     ) -> list:
         """
         Searches for files in the search path and includes subdirectory
@@ -394,7 +394,7 @@ class DataEditor:
             required_columns: set[str] | None = None,
             join_method: str = 'inner',
             sep: str = ',',
-            index_col: str = None,
+            index_col: str | None = None,
             mapping_dictionary: dict[str, str] | None = None,
             additional_pattern_selection: dict[str, list[int] | int] | None = None
     ):
@@ -517,7 +517,7 @@ class DataEditor:
         """
 
         columns = required_columns.copy()
-        selected_columns = list(columns) + [variable]
+        selected_columns = [*list(columns), variable]
 
         return df[selected_columns]
 
@@ -598,8 +598,8 @@ class DataEditor:
             filenames: list[str],
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".csv",
-            include_pattern: str | list[str] = None,
-            exclude_pattern: list[str] = None,
+            include_pattern: str | list[str] | None = None,
+            exclude_pattern: list[str] | None = None,
             variable: str | None = None
     ) -> list[str] | None:
         """
