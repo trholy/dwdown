@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dwdown"
+version = "0.1.0"
+authors = [
+    { name = "Thomas R. Holy", email = "thomas.robert.holy@gmail.com" }
+]
+maintainers = [
+    { name = "Thomas R. Holy", email = "thomas.robert.holy@gmail.com" }
+]
+description = "A package for downloading weather forecasts from Deutscher Wetterdienst (DWD)"
+readme = "README.md"
+keywords = [
+    "DWD",
+    "Deutscher Wetterdienst",
+    "climate",
+    "weather",
+    "open data server",
+    "machine learning",
+    "data mining",
+    "data science",
+]
+license = { text = "CC BY 4.0" }
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Unix",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development",
+]
+
+requires-python = ">=3.8"
+dependencies = [
+    "lxml>=5.3.0",
+    "minio>=7.2.15",
+    "pandas>=2.2.3",
+    "requests>=2.32.3",
+    "xarray>=2025.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.2",
+    "ruff>= 0.9.6",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
+line-length = 88
+src = ["src"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+    "A",  # prevent using keywords that clobber python builtins
+    "B",  # bugbear: security warnings
+    "F",  # pyflakes
+    "ISC", # implicit string concatenation
+    "UP",  # alert you when better syntax is available in your python version
+    "RUF", # ruff-specific rules
+]
+ignore = ["E203", "ISC001", "ISC002", "E111", "E114", "E117"] # rules redundant with the formatter
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 320
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]

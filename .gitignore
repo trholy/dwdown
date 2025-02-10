@@ -1,0 +1,52 @@
+# Project related files
+*.csv
+*.bz2
+*.grib2
+*.idx
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$PYTHON_EXTENSIONS
+
+# Virtual environments
+venv/
+.env/
+.venv/
+pip-wheel-metadata/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Conda environment files
+*.conda
+*.lock
+
+# Pytest / Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Logs and temp files
+*.log
+*.bak
+.DS_Store
+Thumbs.db
