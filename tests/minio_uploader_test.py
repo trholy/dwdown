@@ -15,6 +15,7 @@ uploader = MinioUploader(
 
 # Upload files to MinIO
 uploader.upload_directory()
+uploader.delete_local_files()
 
 # Print status after upload
 print("Successfully uploaded files:", uploader.uploaded_files)
