@@ -1,12 +1,12 @@
-import re
-import os
 import hashlib
 import logging
-from minio import Minio
-from datetime import datetime
-from minio.error import S3Error
+import os
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 
+from minio import Minio
+from minio.error import S3Error
 
 # Configure logging to remove the default prefix
 logging.basicConfig(

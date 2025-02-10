@@ -1,12 +1,11 @@
-import re
-import os
 import bz2
-import shutil
 import logging
-import xarray as xr
-import pandas as pd
-from typing import List, Optional, Union, Set, Dict
+import os
+import re
+import shutil
 
+import pandas as pd
+import xarray as xr
 
 # Configure logging to remove the default prefix
 logging.basicConfig(
@@ -114,10 +113,10 @@ class DataProcessor:
             self,
             decompressed_file_path: str,
             apply_geo_filtering: bool,
-            start_lat: Optional[float],
-            end_lat: Optional[float],
-            start_lon: Optional[float],
-            end_lon: Optional[float]
+            start_lat: float | None,
+            end_lat: float | None,
+            start_lon: float | None,
+            end_lon: float | None
     ) -> None:
         """
         Converts the decompressed GRIB file and
@@ -249,8 +248,8 @@ class DataProcessor:
 
     def flatten_list(
             self,
-            nested_list: Union[List, str]
-    ) -> List[str]:
+            nested_list: list | str
+    ) -> list[str]:
         """Recursively flattens a nested list of filenames."""
         if isinstance(nested_list, str):
             return [nested_list]
@@ -266,11 +265,11 @@ class DataProcessor:
     def _search_directory(
             self,
             directory: str,
-            include_pattern: List[str],
-            exclude_pattern: List[str],
+            include_pattern: list[str],
+            exclude_pattern: list[str],
             name_startswith: str,
             name_endswith: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Recursively search for matching files in the given directory."""
         filenames = []
         for entry in os.scandir(directory):
@@ -299,8 +298,8 @@ class DataProcessor:
             self,
             name_startswith: str = "",
             name_endswith: str = "",
-            include_pattern: List[str] = None,
-            exclude_pattern: List[str] = None,
+            include_pattern: list[str] = None,
+            exclude_pattern: list[str] = None,
     ) -> list:
         """
         Searches for files in the search path and includes subdirectory
@@ -330,12 +329,12 @@ class DataProcessor:
 
     def get_csv(
             self,
-            file_names: List[str],
+            file_names: list[str],
             apply_geo_filtering: bool = False,
-            start_lat: Optional[float] = None,
-            end_lat: Optional[float] = None,
-            start_lon: Optional[float] = None,
-            end_lon: Optional[float] = None
+            start_lat: float | None = None,
+            end_lat: float | None = None,
+            start_lon: float | None = None,
+            end_lon: float | None = None
     ) -> None:
         """
         Processes GRIB files: decompresses and converts them to CSV.
@@ -392,14 +391,12 @@ class DataEditor:
     def __init__(
             self,
             files_path: str,
-            required_columns: Optional[Set[str]] = None,
+            required_columns: set[str] | None = None,
             join_method: str = 'inner',
             sep: str = ',',
             index_col: str = None,
-            mapping_dictionary: Optional[Dict[str, str]] = None,
-            additional_pattern_selection: Optional[Dict[
-                str, Union[List[int], int]
-            ]] = None
+            mapping_dictionary: dict[str, str] | None = None,
+            additional_pattern_selection: dict[str, list[int] | int] | None = None
     ):
         """
         Initializes the DataEditor.
@@ -488,7 +485,7 @@ class DataEditor:
     def _validate_columns_exist(
             self,
             df: pd.DataFrame,
-            required_columns: Set[str],
+            required_columns: set[str],
             variable: str
     ) -> bool:
         """
@@ -562,7 +559,7 @@ class DataEditor:
             self,
             df1: pd.DataFrame,
             df2: pd.DataFrame,
-            merge_on: Set[str],
+            merge_on: set[str],
     ) -> pd.DataFrame:
         """
         Merges two DataFrames based on specified columns.
@@ -570,8 +567,8 @@ class DataEditor:
         common_columns = set(df1.columns) & set(df2.columns) & merge_on
         if not common_columns:
             self.logger.warning(
-                f"No common columns found for merging."
-                f" Returning df1 unchanged.")
+                "No common columns found for merging."
+                " Returning df1 unchanged.")
             return df1
 
         return df1.merge(df2, on=list(common_columns), how=self.join_method)
@@ -579,7 +576,7 @@ class DataEditor:
     def _get_csv_file(
             self,
             variable: str
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Function to get CSV file path for a variable.
         """
@@ -598,13 +595,13 @@ class DataEditor:
 
     def _filter_file_names(
             self,
-            filenames: List[str],
+            filenames: list[str],
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".csv",
-            include_pattern: Union[str, List[str]] = None,
-            exclude_pattern: List[str] = None,
-            variable: Optional[str] = None
-    ) -> Optional[List[str]]:
+            include_pattern: str | list[str] = None,
+            exclude_pattern: list[str] = None,
+            variable: str | None = None
+    ) -> list[str] | None:
         """
         Filters filenames based on start, end, inclusion, exclusion patterns,
         and additional pattern selection.
@@ -684,8 +681,8 @@ class DataEditor:
 
     def _variable_mapping(
             self,
-            variables: List[str]
-    ) -> List[str]:
+            variables: list[str]
+    ) -> list[str]:
         """
         Maps manual variable names to actual CSV column names.
         Maintains the original order of variables.
@@ -695,15 +692,15 @@ class DataEditor:
     def _read_dataframe_from_csv(
             self,
             csv_file: str
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """
         Reads a CSV file into a DataFrame with error handling.
         """
         try:
             return pd.read_csv(csv_file, sep=self.sep, index_col=self.index_col)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.logger.error(f"File not found: {csv_file}", exc_info=True)
-        except pd.errors.EmptyDataError as e:
+        except pd.errors.EmptyDataError:
             self.logger.error(f"File is empty: {csv_file}", exc_info=True)
         except Exception as e:
             self.logger.error(f"Error reading file {csv_file}: {e}",
@@ -712,10 +709,10 @@ class DataEditor:
 
     def merge_dfs(
             self,
-            time_step: Union[str, int],
-            variables: List[str],
-            required_columns: Optional[Set[str]] = None
-    ) -> Optional[pd.DataFrame]:
+            time_step: str | int,
+            variables: list[str],
+            required_columns: set[str] | None = None
+    ) -> pd.DataFrame | None:
         """
         Merges multiple CSV files into a DataFrame based on shared columns.
         """
@@ -727,7 +724,7 @@ class DataEditor:
 
         matching_id = f"_{str(time_step).zfill(3)}_"
 
-        for variable, variable_mapped in zip(variables, variables_mapped):
+        for variable, variable_mapped in zip(variables, variables_mapped, strict=False):
             csv_files = self._get_csv_file(variable)
             selected_files = self._filter_file_names(
                 filenames=csv_files,
@@ -795,7 +792,7 @@ class DataEditor:
     @staticmethod
     def _extract_additional_pattern(
             filename: str
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Extracts the additional pattern from a filename.
         Returns an integer if a valid pattern exists; otherwise, None.

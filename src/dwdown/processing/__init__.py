@@ -1,7 +1,6 @@
-from .processor import DataEditor
-from .processor import DataProcessor
+from .processor import DataEditor, DataProcessor
 
 __all__ = [
-    "DataProcessor",
-    "DataEditor"
+    "DataEditor",
+    "DataProcessor"
 ]

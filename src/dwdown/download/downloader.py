@@ -1,16 +1,15 @@
-import re
-import os
-import time
-import logging
-import requests
 import hashlib
+import logging
+import os
+import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+
+import requests
 from lxml import html
 from minio import Minio
-from datetime import datetime
-from typing import List, Union
 from minio.error import S3Error
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 
 # Configure logging to remove the default prefix
 logging.basicConfig(
@@ -26,7 +25,7 @@ class DWDDownloader:
             url: str,
             restart_failed_downloads: bool = False,
             log_downloads: bool = True,
-            delay: Union[int, float] = None,
+            delay: int | float = None,
             workers: int = 1,
             download_path: str = "downloaded_files",
             log_files_path: str = "log_files_DWDDownloader",
@@ -74,8 +73,8 @@ class DWDDownloader:
 
     @staticmethod
     def _fix_date_format(
-            dates: List[str]
-    ) -> List[str]:
+            dates: list[str]
+    ) -> list[str]:
         """
         Cleans and formats date strings by:
         1. Adding space between a number and a letter
@@ -107,8 +106,8 @@ class DWDDownloader:
 
     @staticmethod
     def _parse_dates(
-            date_strings: List[str]
-    ) -> List[datetime]:
+            date_strings: list[str]
+    ) -> list[datetime]:
         """
         Converts a list of date strings into datetime objects.
         Expected format: '21-Jan-2025-10:20' → datetime(2025, 1, 21, 10, 20).
@@ -182,7 +181,7 @@ class DWDDownloader:
 
     def _get_filenames_from_url(
             self
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Fetches the list of filenames from the given URL by parsing the HTML.
 
@@ -201,12 +200,12 @@ class DWDDownloader:
 
     @staticmethod
     def _filter_file_names(
-            filenames: List[str],
+            filenames: list[str],
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".bz2",
-            include_pattern: List[str] = None,
-            exclude_pattern: List[str] = None
-    ) -> List[str]:
+            include_pattern: list[str] = None,
+            exclude_pattern: list[str] = None
+    ) -> list[str]:
         """
         Filters the list of filenames based on the given start and end patterns
         and inclusion/exclusion patterns.
@@ -234,8 +233,8 @@ class DWDDownloader:
 
     def _generate_links(
             self,
-            filtered_filenames: List[str]
-    ) -> List[str]:
+            filtered_filenames: list[str]
+    ) -> list[str]:
         """
         Generates full URLs from the list of filtered filenames.
 
@@ -246,10 +245,10 @@ class DWDDownloader:
 
     @staticmethod
     def _process_timestamps(
-            min_timestamp: Union[str, int] = None,
-            max_timestamp: Union[str, int] = None,
+            min_timestamp: str | int = None,
+            max_timestamp: str | int = None,
             include_pattern: list = None
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generates a list of formatted timestamp patterns within a given range.
 
@@ -290,11 +289,11 @@ class DWDDownloader:
             self,
             name_startswith: str = "icon-d2_germany",
             name_endswith: str = ".bz2",
-            include_pattern: List[str] = None,
-            exclude_pattern: List[str] = None,
-            min_timestamp: Union[str, int] = None,
-            max_timestamp: Union[str, int] = None,
-    ) -> List[str]:
+            include_pattern: list[str] = None,
+            exclude_pattern: list[str] = None,
+            min_timestamp: str | int = None,
+            max_timestamp: str | int = None,
+    ) -> list[str]:
         """
         Main method to get all the download links after filtering filenames.
 
@@ -603,7 +602,7 @@ class MinioDownloader:
             self,
             bucket_name: str,
             folder_prefix: str,
-    ) -> List:
+    ) -> list:
         """Retrieve a list of remote files from MinIO."""
         remote_files = list(self.client.list_objects(
             bucket_name,

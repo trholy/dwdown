@@ -1,5 +1,4 @@
-from .downloader import DWDDownloader
-from .downloader import MinioDownloader
+from .downloader import DWDDownloader, MinioDownloader
 
 __all__ = [
     "DWDDownloader",

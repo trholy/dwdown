@@ -1,5 +1,4 @@
-from dwdown.processing import DataProcessor
-from dwdown.processing import DataEditor
+from dwdown.processing import DataEditor, DataProcessor
 
 # Initialize the DataProcessor
 editor = DataProcessor(
