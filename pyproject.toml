@@ -77,7 +77,7 @@ select = [
     "UP",  # alert you when better syntax is available in your python version
     "RUF", # ruff-specific rules
 ]
-ignore = ["E203", "ISC001", "ISC002", "E111", "E114", "E117"] # rules redundant with the formatter
+ignore = ["E203", "ISC001", "ISC002", "E111", "E114", "E117", "F401"] # rules redundant with the formatter
 
 [tool.ruff.lint.isort]
 case-sensitive = true
