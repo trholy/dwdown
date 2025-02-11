@@ -1,1213 +1,1195 @@
-# Documentation
-
-# `DWDDownloader` Class
+# DWDDownloader
 
 ## Overview
-The `DWDDownloader` class is designed for:
-- **Downloading files** from a specified URL, particularly from the **Deutscher Wetterdienst (DWD)**.
-- **Filtering filenames** based on patterns.
-- **Extracting dates** from web pages.
-- **Logging downloads** for tracking progress and errors.
-- **Handling concurrent downloads** with retry mechanisms.
 
----
+The `DWDDownloader` class is designed to facilitate the downloading of files from a specified URL. It supports parallel downloading, retry mechanisms for failed downloads, and logging of download activities. The class uses XPath expressions to parse filenames and dates from the HTML content of the URL.
 
 ## Constructor
 
 ```python
-DWDDownloader(
-    url: str,
-    restart_failed_downloads: bool = False,
-    log_downloads: bool = True,
-    delay: Union[int, float] = None,
-    workers: int = 1,
-    download_path: str = "downloaded_files",
-    log_files_path: str = "log_files_DWDDownloader",
-    xpath_files: str = "/html/body/pre//a/@href",
-    xpath_dates: str = "//pre/text()"
-)
+DWDDownloader(url: str, restart_failed_downloads: bool = False, log_downloads: bool = True, delay: int | float | None = None, workers: int = 1, download_path: str = "downloaded_files", log_files_path: str = "log_files_DWDDownloader", xpath_files: str = "/html/body/pre//a/@href", xpath_dates: str = "//pre/text()")
 ```
 
 ### Parameters
-- **`url`** (`str`):  
-  **Base URL** from which files will be downloaded.
-- **`restart_failed_downloads`** (`bool`, default=`False`):  
-  If `True`, **failed downloads** are retried sequentially.
-- **`log_downloads`** (`bool`, default=`True`):  
-  If `True`, logs **download details**.
-- **`delay`** (`int | float`, default=`None`):  
-  **Delay (seconds)** between downloads to avoid excessive requests.
-- **`workers`** (`int`, default=`1`):  
-  Number of **concurrent downloads** using threading.
-- **`download_path`** (`str`, default=`"downloaded_files"`):  
-  Directory where downloaded files are stored.
-- **`log_files_path`** (`str`, default=`"log_files_DWDDownloader"`):  
-  Directory for storing **log files**.
-- **`xpath_files`** (`str`, default=`"/html/body/pre//a/@href"`):  
-  XPath query to **extract file names** from the webpage.
-- **`xpath_dates`** (`str`, default=`"//pre/text()"`):  
-  XPath query to **extract dates** from the webpage.
 
-### Usage
-```python
-downloader = DWDDownloader(
-    url="https://example.com/data/",
-    workers=4,
-    restart_failed_downloads=True
-)
-```
-
----
+- `url` : `str`
+  - Base URL to fetch data from.
+- `restart_failed_downloads` : `bool`, default=`False`
+  - If `True`, retry failed downloads sequentially.
+- `log_downloads` : `bool`, default=`True`
+  - If `True`, log download activities.
+- `delay` : `int | float | None`, default=`None`
+  - Optional delay between downloads (in seconds).
+- `workers` : `int`, default=`1`
+  - Number of worker threads for parallel downloading.
+- `download_path` : `str`, default=`"downloaded_files"`
+  - Directory to save downloaded files.
+- `log_files_path` : `str`, default=`"log_files_DWDDownloader"`
+  - Directory to save log files.
+- `xpath_files` : `str`, default=`"/html/body/pre//a/@href"`
+  - XPath expression to extract filenames from the HTML.
+- `xpath_dates` : `str`, default=`"//pre/text()"`
+  - XPath expression to extract date strings from the HTML.
 
 ## Methods
 
-### `get_data_dates`
-```python
-get_data_dates(url: str = None) -> tuple[datetime, datetime]
-```
-Extracts and processes **date strings** from the webpage.
-
-### Parameters
-- **`url`** (`str`, optional):  
-  If provided, fetches dates from this **specific URL** instead of `self.url`.
-
-### Returns
-- **`tuple[datetime, datetime]`**:  
-  A **tuple of the earliest and latest dates** extracted.
-
-### Usage
-```python
-min_date, max_date = downloader.get_data_dates()
-```
-
----
-
-### `get_current_date`
-```python
-get_current_date(utc: bool = True, time_of_day: bool = False) -> datetime
-```
-Returns the **current date** in a formatted string.
-
-### Parameters
-- **`utc`** (`bool`, default=`True`):  
-  If `True`, returns **UTC time**; otherwise, returns local time.
-- **`time_of_day`** (`bool`, default=`False`):  
-  If `True`, includes the **time of day**.
-
-### Returns
-- **`datetime`**:  
-  The formatted **current date and time**.
-
-### Usage
-```python
-current_date = downloader.get_current_date()
-```
-
----
-
-### `get_links`
-```python
-get_links(
-    name_startswith: str,
-    name_endswith: str,
-    include_pattern: List[str],
-    exclude_pattern: List[str]
-) -> List[str]
-```
-Filters and **generates a list of file download links**.
-
-### Parameters
-- **`name_startswith`** (`str`):  
-  **Filters files** that start with this prefix.
-- **`name_endswith`** (`str`):  
-  **Filters files** that end with this suffix.
-- **`include_pattern`** (`List[str]`):  
-  List of substrings that **must be present** in the filename.
-- **`exclude_pattern`** (`List[str]`):  
-  List of substrings that **must not be present** in the filename.
-
-### Returns
-- **`List[str]`**:  
-  A **list of URLs** that match the filter criteria.
-
-### Usage
-```python
-links = downloader.get_links(name_startswith="data_", name_endswith=".csv", include_pattern=["2024"], exclude_pattern=["old"])
-```
-
----
-
-### `download_files`
-```python
-download_files(check_for_existence: bool = False) -> None
-```
-Downloads **all files** from `self.full_links` using **multi-threading**.  
-Retries failed downloads if `restart_failed_downloads=True`.
-
-### Parameters
-- **`check_for_existence`** (`bool`, default=`False`):  
-  If `True`, skips downloading **files that already exist**.
-
-### Returns
-- **`None`**
-
-### Usage
-```python
-downloader.download_files(check_for_existence=True)
-```
-
----
-
-## Other Methods
-
 ### `_ensure_directory_exists`
+
 ```python
+@staticmethod
 _ensure_directory_exists(path: str) -> None
 ```
-Ensures that the **specified directory exists**, creating it if necessary.
 
----
+Helper function to ensure a directory exists, creates if not.
 
 ### `_fix_date_format`
-```python
-_fix_date_format(dates: List[str]) -> List[str]
-```
-Converts raw **date strings** into a **standardized format**.
 
----
+```python
+@staticmethod
+_fix_date_format(dates: list[str]) -> list[str]
+```
+
+Cleans and formats date strings by:
+1. Adding space between a number and a letter (e.g., "2025Jan" → "2025 Jan").
+2. Replacing space with "-" between two numbers (e.g., "2025 10:20" → "2025-10:20").
+3. Removing trailing numbers if preceded by two or more spaces.
 
 ### `_parse_dates`
-```python
-_parse_dates(date_strings: List[str]) -> List[datetime]
-```
-Converts **formatted date strings** into `datetime` objects.
 
----
+```python
+@staticmethod
+_parse_dates(date_strings: list[str]) -> list[datetime]
+```
+
+Converts a list of date strings into datetime objects. Expected format: '21-Jan-2025-10:20' → datetime(2025, 1, 21, 10, 20).
+
+### `get_data_dates`
+
+```python
+get_data_dates(url: str | None = None) -> tuple[datetime, datetime]
+```
+
+Fetches and processes date strings from a given URL.
+
+### Parameters
+
+- `url` : `str | None`, default=`None`
+  - URL to fetch date strings from. If `None`, uses the URL provided during initialization.
+
+### Returns
+
+- `tuple[datetime, datetime]`
+  - Minimum and maximum date from the URL.
+
+### `get_current_date`
+
+```python
+@staticmethod
+get_current_date(utc: bool = True, time_of_day: bool = False) -> datetime
+```
+
+Get the current system date, formatted as "DD-MMM-YYYY-HH:MM".
+
+### Parameters
+
+- `utc` : `bool`, default=`True`
+  - If `True`, return date with UTC time; otherwise, return system time.
+- `time_of_day` : `bool`, default=`False`
+  - If `True`, return date with time; otherwise, return only the date.
+
+### Returns
+
+- `datetime`
+  - Current date (with or without time) in formatted datetime format.
 
 ### `_get_filenames_from_url`
-```python
-_get_filenames_from_url() -> List[str]
-```
-Extracts **file names** from the given **URL**.
 
----
+```python
+_get_filenames_from_url() -> list[str]
+```
+
+Fetches the list of filenames from the given URL by parsing the HTML.
+
+### Returns
+
+- `list[str]`
+  - A list of filenames (URLs).
 
 ### `_filter_file_names`
-```python
-_filter_file_names(
-    filenames: List[str],
-    name_startswith: str,
-    name_endswith: str,
-    include_pattern: List[str],
-    exclude_pattern: List[str]
-) -> List[str]
-```
-Filters **file names** based on given criteria.
 
----
+```python
+@staticmethod
+_filter_file_names(filenames: list[str], name_startswith: str = "icon-d2_germany", name_endswith: str = ".bz2", include_pattern: list[str] | None = None, exclude_pattern: list[str] | None = None) -> list[str]
+```
+
+Filters the list of filenames based on the given start and end patterns and inclusion/exclusion patterns.
+
+### Parameters
+
+- `filenames` : `list[str]`
+  - List of filenames to filter.
+- `name_startswith` : `str`, default=`"icon-d2_germany"`
+  - String that filenames must start with.
+- `name_endswith` : `str`, default=`".bz2"`
+  - String that filenames must end with.
+- `include_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; at least one must be in the filename.
+- `exclude_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; filenames with any of these are excluded.
+
+### Returns
+
+- `list[str]`
+  - Filtered list of filenames.
 
 ### `_generate_links`
-```python
-_generate_links(filtered_filenames: List[str]) -> List[str]
-```
-Creates **full download links** from **filtered filenames**.
 
----
+```python
+_generate_links(filtered_filenames: list[str]) -> list[str]
+```
+
+Generates full URLs from the list of filtered filenames.
+
+### Parameters
+
+- `filtered_filenames` : `list[str]`
+  - List of filtered filenames.
+
+### Returns
+
+- `list[str]`
+  - List of full URLs.
+
+### `_process_timestamps`
+
+```python
+@staticmethod
+_process_timestamps(min_timestamp: str | int | None = None, max_timestamp: str | int | None = None, include_pattern: list | None = None) -> list[str]
+```
+
+Generates a list of formatted timestamp patterns within a given range.
+
+### Parameters
+
+- `min_timestamp` : `str | int | None`, default=`None`
+  - The minimum timestamp value (default is 0 if `None`).
+- `max_timestamp` : `str | int | None`, default=`None`
+  - The maximum timestamp value (default is 48 if `None`).
+- `include_pattern` : `list | None`, default=`None`
+  - A list to which the generated timestamp patterns will be added. If `None`, a new list is created.
+
+### Returns
+
+- `list[str]`
+  - A list of formatted timestamp patterns (e.g., "_000_", "_001_", ..., "_048_").
+
+### `get_links`
+
+```python
+get_links(name_startswith: str = "icon-d2_germany", name_endswith: str = ".bz2", include_pattern: list[str] | None = None, exclude_pattern: list[str] | None = None, min_timestamp: str | int | None = None, max_timestamp: str | int | None = None) -> list[str]
+```
+
+Main method to get all the download links after filtering filenames.
+
+### Parameters
+
+- `name_startswith` : `str`, default=`"icon-d2_germany"`
+  - String that filenames must start with.
+- `name_endswith` : `str`, default=`".bz2"`
+  - String that filenames must end with.
+- `include_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; at least one must be in the filename.
+- `exclude_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; filenames with any of these are excluded.
+- `min_timestamp` : `str | int | None`, default=`None`
+  - The minimum timestamp value.
+- `max_timestamp` : `str | int | None`, default=`None`
+  - The maximum timestamp value.
+
+### Returns
+
+- `list[str]`
+  - List of full download URLs.
 
 ### `_download_file`
+
 ```python
 _download_file(link: str, check_for_existence: bool) -> bool
 ```
-Downloads a **single file** and logs its progress.
 
----
+Downloads a single file from the provided URL if it does not already exist.
+
+### Parameters
+
+- `link` : `str`
+  - The URL to download the file from.
+- `check_for_existence` : `bool`
+  - If `True`, skips download if the file already exists.
+
+### Returns
+
+- `bool`
+  - `True` if the file was successfully downloaded or already exists, else `False`.
+
+### `download_files`
+
+```python
+download_files(check_for_existence: bool = False) -> None
+```
+
+Downloads all files from the generated links using concurrency for faster processing. If downloads fail and `self.restart_failed_downloads` is enabled, retry them sequentially. Finally failed downloads are stored in `self.finally_failed_files`.
+
+### Parameters
+
+- `check_for_existence` : `bool`, default=`False`
+  - If `True`, skips download if the file already exists.
 
 ### `_log_name_formatting`
+
 ```python
 _log_name_formatting(link: str) -> tuple[str, str]
 ```
-Formats **log file names** with timestamps.
-
----
 
 ### `_get_variable_from_link`
+
 ```python
+@staticmethod
 _get_variable_from_link(link: str) -> str
 ```
-Extracts **variable name** from the URL.
-
----
 
 ### `get_formatted_time_stamp`
+
 ```python
+@staticmethod
 get_formatted_time_stamp(time_stamp: datetime) -> str
 ```
-Formats a **datetime object** as a timestamp for logging.
-
----
 
 ### `_write_log_file`
+
 ```python
 _write_log_file(filename: str, data: list) -> None
 ```
-Writes a list of **entries to a log file**.
+
+Writes a list of file links to a log file, ensuring each entry is on a new line.
+
+### Parameters
+
+- `filename` : `str`
+  - Path to the log file.
+- `data` : `list`
+  - List of file links to write to the log file.
 
 ---
 
-### `_process_timestamps`
-```python
-_process_timestamps(
-    min_timestamp: Union[str, int] = None,
-    max_timestamp: Union[str, int] = None,
-    include_pattern: list = None
-) -> List[str]
-```
-Generates a **list of timestamp patterns** within a given range.
-
----
-
-# `MinioDownloader` Class
+# MinioDownloader
 
 ## Overview
-The `MinioDownloader` class provides functionality for:
-- **Downloading files** from a MinIO bucket.
-- **Verifying file integrity** using checksums.
-- **Logging** download progress and errors.
-- **Parallel downloads** using multiple worker threads.
 
----
+The `MinioDownloader` class is designed to facilitate the downloading of files from a MinIO server. It supports parallel downloading, integrity checks using MD5 hashes, and logging of download activities. The class ensures that the specified bucket exists and provides methods to download files recursively from a specified bucket or folder.
 
 ## Constructor
 
 ```python
-MinioDownloader(
-    endpoint: str,
-    access_key: str,
-    secret_key: str,
-    files_path: str,
-    secure: bool = False,
-    log_downloads: bool = True,
-    log_files_path: str = "log_files_MinioDownloader",
-    workers: int = 1
-)
+MinioDownloader(endpoint: str, access_key: str, secret_key: str, files_path: str, secure: bool = False, log_downloads: bool = True, log_files_path: str = "log_files_MinioDownloader", workers: int = 1)
 ```
 
 ### Parameters
-- **`endpoint`** (`str`):  
-  The **MinIO server endpoint**.
-- **`access_key`** (`str`):  
-  Authentication access key.
-- **`secret_key`** (`str`):  
-  Authentication secret key.
-- **`files_path`** (`str`):  
-  **Local directory** where downloaded files are stored.
-- **`secure`** (`bool`, default=`False`):  
-  If `True`, enables **secure (HTTPS) connections**.
-- **`log_downloads`** (`bool`, default=`True`):  
-  If `True`, enables **logging of download details**.
-- **`log_files_path`** (`str`, default=`"log_files_MinioDownloader"`):  
-  Directory where **log files** are stored.
-- **`workers`** (`int`, default=`1`):  
-  Number of **parallel worker threads** for downloading.
 
-### Usage
-```python
-downloader = MinioDownloader(
-    endpoint="play.min.io",
-    access_key="your-access-key",
-    secret_key="your-secret-key",
-    files_path="./downloads",
-    secure=True,
-    workers=4
-)
-```
-
----
+- `endpoint` : `str`
+  - The MinIO server endpoint.
+- `access_key` : `str`
+  - Access key for authentication.
+- `secret_key` : `str`
+  - Secret key for authentication.
+- `files_path` : `str`
+  - Directory to save downloaded files.
+- `secure` : `bool`, default=`False`
+  - If `True`, use HTTPS to connect to the MinIO server.
+- `log_downloads` : `bool`, default=`True`
+  - If `True`, log download activities.
+- `log_files_path` : `str`, default=`"log_files_MinioDownloader"`
+  - Directory to save log files.
+- `workers` : `int`, default=`1`
+  - Number of worker threads for parallel downloading.
 
 ## Methods
 
-### `download_bucket`
+### `_ensure_directory_exists`
+
 ```python
-download_bucket(bucket_name: str, folder_prefix: str = None) -> None
-```
-Downloads **all files** from a specified MinIO bucket.  
-Supports **optional folder prefix filtering**.
-
-### Parameters
-- **`bucket_name`** (`str`):  
-  The **name of the MinIO bucket**.
-- **`folder_prefix`** (`str`, optional):  
-  If provided, **only downloads files from this folder**.
-
-### Returns
-- **`None`**
-
-### Usage
-```python
-downloader.download_bucket("my-bucket", "subfolder/")
+@staticmethod
+_ensure_directory_exists(path: str) -> None
 ```
 
----
-
-### `calculate_md5`
-```python
-calculate_md5(file_path: str) -> str
-```
-Computes the **MD5 hash** of a given file.
-
-### Parameters
-- **`file_path`** (`str`):  
-  Path to the file.
-
-### Returns
-- **`str`**:  
-  The **MD5 hash** of the file.
-
-### Usage
-```python
-hash_value = MinioDownloader.calculate_md5("file.txt")
-```
-
----
-
-## Other Methods
+Helper function to ensure a directory exists, creates if not.
 
 ### `_ensure_bucket`
+
 ```python
 _ensure_bucket(bucket_name: str) -> None
 ```
-Checks if the **specified bucket exists** and logs the result.
+
+Ensure the bucket exists.
 
 ### Parameters
-- **`bucket_name`** (`str`):  
-  Name of the MinIO bucket.
 
-### Returns
-- **`None`**
+- `bucket_name` : `str`
+  - Name of the bucket to check.
 
----
+### `calculate_md5`
 
-### `_get_remote_files`
 ```python
-_get_remote_files(bucket_name: str, folder_prefix: str) -> List[str]
+@staticmethod
+calculate_md5(file_path: str) -> str
 ```
-Retrieves a **list of available files** in the MinIO bucket.
+
+Computes the MD5 hash of a file.
 
 ### Parameters
-- **`bucket_name`** (`str`):  
-  Name of the MinIO bucket.
-- **`folder_prefix`** (`str`):  
-  If provided, **filters files by folder prefix**.
+
+- `file_path` : `str`
+  - Path to the file for which to compute the MD5 hash.
 
 ### Returns
-- **`List[str]`**:  
-  A **list of available files** in the bucket.
 
----
-
-### `_download_file`
-```python
-_download_file(
-    bucket_name: str,
-    local_file_path: str,
-    remote_path: str
-) -> bool
-```
-Downloads a **single file** from MinIO and **verifies its integrity**.
-
-### Parameters
-- **`bucket_name`** (`str`):  
-  Name of the MinIO bucket.
-- **`local_file_path`** (`str`):  
-  Path where the downloaded file will be saved.
-- **`remote_path`** (`str`):  
-  Remote file path inside the bucket.
-
-### Returns
-- **`bool`**:  
-  `True` if **download is successful**, `False` otherwise.
-
----
-
-### `_verify_file_integrity`
-```python
-_verify_file_integrity(
-    bucket_name: str,
-    local_file_path: str,
-    remote_path: str
-) -> bool
-```
-Verifies whether the **downloaded file matches the original checksum**.
-
-### Parameters
-- **`bucket_name`** (`str`):  
-  Name of the MinIO bucket.
-- **`local_file_path`** (`str`):  
-  Path of the **downloaded file**.
-- **`remote_path`** (`str`):  
-  Remote file path inside the bucket.
-
-### Returns
-- **`bool`**:  
-  `True` if the **file is intact**, `False` otherwise.
-
----
-
-### `_write_log_file`
-```python
-_write_log_file(filename: str, data: List[str]) -> None
-```
-Writes **downloaded file names** to a log file.
-
-### Parameters
-- **`filename`** (`str`):  
-  The name of the **log file**.
-- **`data`** (`List[str]`):  
-  List of downloaded file names.
-
-### Returns
-- **`None`**
-
----
+- `str`
+  - MD5 hash of the file.
 
 ### `_get_current_date`
+
 ```python
+@staticmethod
 _get_current_date() -> str
 ```
-Returns the **current date** formatted as `"DD-MMM-YYYY-HH-MM"`.
+
+Get the current system date, formatted as "DD-MMM-YYYY-HH-MM".
 
 ### Returns
-- **`str`**:  
-  The formatted **current date**.
 
----
+- `str`
+  - Current date in formatted datetime format.
 
-# `DataProcessor` Class
-
-## Overview
-The `DataProcessor` class provides functionality to:
-- **Search, decompress, and process** GRIB files.
-- Convert GRIB files into **CSV format**.
-- Filter files based on **naming patterns** and **geographic coordinates**.
-- Log all activities, including **errors and warnings**.
-
----
-
-## Constructor
+### `_get_remote_files`
 
 ```python
-DataProcessor(
-    search_path: str,
-    extraction_path: str,
-    converted_files_path: str
-)
+_get_remote_files(bucket_name: str, folder_prefix: str) -> list
 ```
 
-### Parameters
-- **`search_path`** (`str`):  
-  The directory where GRIB files are searched.
-- **`extraction_path`** (`str`):  
-  The directory where decompressed files are stored.
-- **`converted_files_path`** (`str`):  
-  The directory where converted CSV files are stored.
-
-### Usage
-- Creates necessary directories.
-- Initializes structured logging.
-
----
-
-## Methods
-
-### `get_filenames`
-```python
-get_filenames(
-    name_startswith: str = "",
-    name_endswith: str = "",
-    include_pattern: List[str] = None,
-    exclude_pattern: List[str] = None
-) -> List[str]
-```
-Searches for files in the specified directory and **filters them based on naming criteria**.
+Retrieve a list of remote files from MinIO.
 
 ### Parameters
-- **`name_startswith`** (`str`, optional):  
-  Filters files by **starting characters**.
-- **`name_endswith`** (`str`, optional):  
-  Filters files by **ending characters**.
-- **`include_pattern`** (`List[str]`, optional):  
-  Ensures filenames contain **specific substrings**.
-- **`exclude_pattern`** (`List[str]`, optional):  
-  Excludes filenames containing **specific substrings**.
+
+- `bucket_name` : `str`
+  - Name of the bucket to retrieve files from.
+- `folder_prefix` : `str`
+  - Prefix of the folder to retrieve files from.
 
 ### Returns
-- **`List[str]`**: A list of **filtered file paths**.
 
----
+- `list`
+  - List of remote files.
 
-### `get_csv`
+### `download_bucket`
+
 ```python
-get_csv(
-    file_names: List[str],
-    apply_geo_filtering: bool = False,
-    start_lat: Optional[float] = None,
-    end_lat: Optional[float] = None,
-    start_lon: Optional[float] = None,
-    end_lon: Optional[float] = None
-) -> None
+download_bucket(bucket_name: str, folder_prefix: str | None = None) -> None
 ```
-Processes **GRIB files** by:
-1. **Decompressing** them.
-2. **Converting** them into CSV format.
-3. **Applying geographic filtering** (optional).
+
+Recursively downloads a bucket or folder from MinIO.
 
 ### Parameters
-- **`file_names`** (`List[str]`):  
-  List of GRIB files to process.
-- **`apply_geo_filtering`** (`bool`, default=`False`):  
-  If `True`, filters data based on **geographic coordinates**.
-- **`start_lat`, `end_lat`** (`float`, optional):  
-  Latitude range for filtering.
-- **`start_lon`, `end_lon`** (`float`, optional):  
-  Longitude range for filtering.
+
+- `bucket_name` : `str`
+  - Name of the bucket to download from.
+- `folder_prefix` : `str | None`, default=`None`
+  - Prefix of the folder to download from. If `None`, downloads the entire bucket.
+
+### `_download_file`
+
+```python
+_download_file(bucket_name: str, local_file_path: str, remote_path: str) -> bool
+```
+
+Downloads a single file with immediate logging and integrity check.
+
+### Parameters
+
+- `bucket_name` : `str`
+  - Name of the bucket to download from.
+- `local_file_path` : `str`
+  - Local path to save the downloaded file.
+- `remote_path` : `str`
+  - Remote path of the file to download.
 
 ### Returns
-- **`None`**
 
----
+- `bool`
+  - `True` if the file was successfully downloaded and verified, else `False`.
 
-## Other Methods
+### `_verify_file_integrity`
 
-### `_ensure_directory_exists`
 ```python
-_ensure_directory_exists(directory: str) -> None
+_verify_file_integrity(bucket_name: str, local_file_path: str, remote_path: str) -> bool
 ```
-Ensures that the given **directory exists**, creating it if necessary.
+
+Verifies if the local file matches the remote file's checksum.
 
 ### Parameters
-- **`directory`** (`str`):  
-  The directory path to check or create.
+
+- `bucket_name` : `str`
+  - Name of the bucket.
+- `local_file_path` : `str`
+  - Local path of the file.
+- `remote_path` : `str`
+  - Remote path of the file.
 
 ### Returns
-- **`None`**
 
----
-
-### `_decompress_files`
-```python
-_decompress_files(file_to_decompress: str) -> str
-```
-Decompresses a `.bz2` file.
-
-### Parameters
-- **`file_to_decompress`** (`str`):  
-  The compressed `.bz2` file path.
-
-### Returns
-- **`str`**:  
-  The **path of the decompressed file**.
-
----
-
-### `_get_decompressed_file_path`
-```python
-_get_decompressed_file_path(file_to_decompress: str) -> str
-```
-Generates a **decompressed file path**, ensuring directory structure is maintained.
-
-### Parameters
-- **`file_to_decompress`** (`str`):  
-  The compressed `.bz2` file path.
-
-### Returns
-- **`str`**:  
-  The **expected decompressed file path**.
-
----
-
-### `_read_grib_to_dataframe`
-```python
-_read_grib_to_dataframe(
-    decompressed_file_path: str,
-    apply_geo_filtering: bool,
-    start_lat: Optional[float],
-    end_lat: Optional[float],
-    start_lon: Optional[float],
-    end_lon: Optional[float]
-) -> pd.DataFrame
-```
-Reads a **GRIB file**, converts it into a **Pandas DataFrame**, and optionally applies **geographic filtering**.
-
-### Parameters
-- **`decompressed_file_path`** (`str`):  
-  Path of the **decompressed** GRIB file.
-- **`apply_geo_filtering`** (`bool`):  
-  Whether to **filter data** based on coordinates.
-- **`start_lat`, `end_lat`** (`float`, optional):  
-  Latitude range for filtering.
-- **`start_lon`, `end_lon`** (`float`, optional):  
-  Longitude range for filtering.
-
-### Returns
-- **`pd.DataFrame`**:  
-  A **filtered** or **unfiltered** DataFrame.
-
----
-
-### `_filter_by_coordinates`
-```python
-_filter_by_coordinates(
-    df: pd.DataFrame,
-    start_lat: float,
-    end_lat: float,
-    start_lon: float,
-    end_lon: float
-) -> pd.DataFrame
-```
-Filters a **Pandas DataFrame** by latitude and longitude.
-
-### Parameters
-- **`df`** (`pd.DataFrame`):  
-  The input DataFrame.
-- **`start_lat`, `end_lat`** (`float`):  
-  Latitude range for filtering.
-- **`start_lon`, `end_lon`** (`float`):  
-  Longitude range for filtering.
-
-### Returns
-- **`pd.DataFrame`**:  
-  The **filtered** DataFrame.
-
----
-
-### `_save_as_csv`
-```python
-_save_as_csv(df: pd.DataFrame, csv_file_path: str) -> None
-```
-Saves a **DataFrame as a CSV file**.
-
-### Parameters
-- **`df`** (`pd.DataFrame`):  
-  The DataFrame to save.
-- **`csv_file_path`** (`str`):  
-  The path where the CSV file will be saved.
-
-### Returns
-- **`None`**
-
----
-
-### `_get_converted_file_path`
-```python
-_get_converted_file_path(decompressed_file_path: str) -> str
-```
-Generates the **CSV file path** based on the decompressed file path.
-
-### Parameters
-- **`decompressed_file_path`** (`str`):  
-  The path of the decompressed GRIB file.
-
-### Returns
-- **`str`**:  
-  The **expected CSV file path**.
-
----
-
-### `flatten_list`
-```python
-flatten_list(nested_list: Union[List, str]) -> List[str]
-```
-Recursively flattens a **nested list** of filenames.
-
-### Parameters
-- **`nested_list`** (`Union[List, str]`):  
-  A **nested list** of filenames.
-
-### Returns
-- **`List[str]`**:  
-  A **flattened list** of filenames.
-
----
-
-### `_search_directory`
-```python
-_search_directory(
-    directory: str,
-    include_pattern: List[str],
-    exclude_pattern: List[str],
-    name_startswith: str,
-    name_endswith: str
-) -> List[str]
-```
-Searches a **directory recursively**, filtering files based on patterns.
-
-### Parameters
-- **`directory`** (`str`):  
-  The directory to search.
-- **`include_pattern`** (`List[str]`):  
-  Substrings that must be included.
-- **`exclude_pattern`** (`List[str]`):  
-  Substrings that should be excluded.
-- **`name_startswith`** (`str`):  
-  Prefix filter.
-- **`name_endswith`** (`str`):  
-  Suffix filter.
-
-### Returns
-- **`List[str]`**:  
-  A list of **matching file paths**.
-
----
-
-# `MinioUploader` Class
-
-## Overview
-The `MinioUploader` class provides functionality for uploading files to a **MinIO object storage server**.  
-It supports:
-- Uploading files from a local directory.
-- Ensuring data integrity via **MD5 hash verification**.
-- **Parallel uploads** using threading.
-- Logging upload results and handling errors.
-- Creating buckets automatically if they do not exist.
-- **Deleting local files** after a successful upload.
-
----
-
-## Constructor
-
-```python
-MinioUploader(
-    endpoint: str,
-    access_key: str,
-    secret_key: str,
-    files_path: str,
-    bucket_name: str = 'my-bucket',
-    secure: bool = False,
-    log_uploads: bool = True,
-    log_files_path: str = "log_files_MinioUploader",
-    workers: int = 1,
-)
-```
-
-### Parameters
-- **`endpoint`** (`str`):  
-  The endpoint (URL) of the MinIO server.
-- **`access_key`** (`str`):  
-  The access key for MinIO authentication.
-- **`secret_key`** (`str`):  
-  The secret key for MinIO authentication.
-- **`files_path`** (`str`):  
-  The local directory where the files to be uploaded are located.
-- **`bucket_name`** (`str`, default=`'my-bucket'`):  
-  The name of the MinIO bucket for uploads.
-- **`secure`** (`bool`, default=`False`):  
-  If `True`, enables **SSL** (secure connection).
-- **`log_uploads`** (`bool`, default=`True`):  
-  If `True`, logs the upload results.
-- **`log_files_path`** (`str`, default=`'log_files_MinioUploader'`):  
-  Directory to store log files.
-- **`workers`** (`int`, default=`1`):  
-  The number of concurrent threads for uploading.
-
----
-
-## Methods
-
-### `upload_directory`
-```python
-upload_directory(remote_prefix: str = "") -> None
-```
-Recursively uploads all files from the local directory to the **MinIO bucket**, supporting parallel uploads.
-
-### Parameters
-- **`remote_prefix`** (`str`, default=`""`):  
-  A prefix to prepend to the remote file paths.
-
-### Returns
-- **`None`**  
-
----
-
-### `delete_local_files`
-```python
-delete_local_files() -> None
-```
-Deletes the **successfully uploaded** local files and removes any **empty directories**.
-
-### Parameters
-- **None**  
-
-### Returns
-- **`None`**  
-
----
-
-## Other Methods
-
-### `_upload_file`
-```python
-_upload_file(local_file_path: str, remote_path: str) -> bool
-```
-Uploads a **single file** to the MinIO bucket, ensuring integrity by **comparing MD5 hashes**.
-
-### Parameters
-- **`local_file_path`** (`str`):  
-  The local file path to be uploaded.
-- **`remote_path`** (`str`):  
-  The destination path in the MinIO bucket.
-
-### Returns
-- **`bool`**:  
-  `True` if the file is **successfully uploaded** and integrity is **verified**, otherwise `False`.
-
----
-
-### `_ensure_directory_exists`
-```python
-_ensure_directory_exists(path: str) -> None
-```
-Ensures that the given **directory exists**, creating it if necessary.
-
-### Parameters
-- **`path`** (`str`):  
-  The directory path to check or create.
-
-### Returns
-- **`None`**  
-
----
-
-### `_ensure_bucket`
-```python
-_ensure_bucket() -> None
-```
-Ensures that the **MinIO bucket exists**. If it does not, the method **creates** it.
-
-### Parameters
-- **None**  
-
-### Returns
-- **`None`**  
-
----
-
-### `_fetch_existing_files`
-```python
-_fetch_existing_files(remote_prefix: str) -> dict
-```
-Fetches **existing files** in the bucket along with their **ETags**.
-
-### Parameters
-- **`remote_prefix`** (`str`):  
-  Object name prefix to filter files.
-
-### Returns
-- **`dict`**:  
-  A dictionary containing `{remote_path: etag}`.
-
----
+- `bool`
+  - `True` if the local file matches the remote file's checksum, else `False`.
 
 ### `_write_log_file`
+
 ```python
 _write_log_file(filename: str, data: list) -> None
 ```
-Writes a **list of uploaded or corrupted files** to a log file.
+
+Writes a list of file links to a log file, ensuring each entry is on a new line.
 
 ### Parameters
-- **`filename`** (`str`):  
-  The name of the log file.
-- **`data`** (`list`):  
-  A list of file paths to log.
 
-### Returns
-- **`None`**  
+- `filename` : `str`
+  - Path to the log file.
+- `data` : `list`
+  - List of file links to write to the log file.
 
 ---
 
-# `DataEditor` Class
+# MinioUploader
 
 ## Overview
 
-The `DataEditor` class provides functionality for handling and processing CSV data. It enables merging, filtering, and validating data from multiple CSV files based on various parameters.
+The `MinioUploader` class is designed to facilitate the uploading of files to a MinIO server. It supports parallel uploading, integrity checks using MD5 hashes, and logging of upload activities. The class ensures that the specified bucket exists and provides methods to upload files recursively from a specified directory.
 
-## Initialization
+## Constructor
 
 ```python
-DataEditor(
-    files_path: str,
-    required_columns: Optional[Set[str]] = None,
-    join_method: str = 'inner',
-    sep: str = ',',
-    index_col: Optional[str] = None,
-    mapping_dictionary: Optional[Dict[str, str]] = None,
-    additional_pattern_selection: Optional[Dict[str, int]] = None
-)
+MinioUploader(endpoint: str, access_key: str, secret_key: str, files_path: str, bucket_name: str = 'my-bucket', secure: bool = False, log_uploads: bool = True, log_files_path: str = "log_files_MinioUploader", workers: int = 1)
 ```
 
 ### Parameters
-- **`files_path`** (`str`):  
-  Path to the directory containing CSV files.
-- **`required_columns`** (`Optional[Set[str]]`, default=`{'latitude', 'longitude', 'valid_time'}`):  
-  Set of columns that must be present in the DataFrame.
-- **`join_method`** (`str`, default=`'inner'`):  
-  Method for merging DataFrames (`'inner'`, `'outer'`, etc.).
-- **`sep`** (`str`, default=`','`):  
-  Delimiter used in the CSV files.
-- **`index_col`** (`Optional[str]`, default=`None`):  
-  Column to be used as the DataFrame index.
-- **`mapping_dictionary`** (`Optional[Dict[str, str]]`, default=`None`):  
-  Dictionary mapping original variable names to CSV column names.
-- **`additional_pattern_selection`** (`Optional[Dict[str, int]]`, default=`None`):  
-  Dictionary defining additional filtering patterns.
 
----
+- `endpoint` : `str`
+  - The MinIO server endpoint.
+- `access_key` : `str`
+  - Access key for authentication.
+- `secret_key` : `str`
+  - Secret key for authentication.
+- `files_path` : `str`
+  - Directory containing files to upload.
+- `bucket_name` : `str`, default=`'my-bucket'`
+  - Name of the bucket to upload files to.
+- `secure` : `bool`, default=`False`
+  - If `True`, use HTTPS to connect to the MinIO server.
+- `log_uploads` : `bool`, default=`True`
+  - If `True`, log upload activities.
+- `log_files_path` : `str`, default=`"log_files_MinioUploader"`
+  - Directory to save log files.
+- `workers` : `int`, default=`1`
+  - Number of worker threads for parallel uploading.
 
 ## Methods
 
-### `merge_dfs`
+### `_ensure_directory_exists`
+
 ```python
-merge_dfs(
-    matching_id: Union[str, List[str]],
-    variables: List[str],
-    required_columns: Optional[Set[str]] = None
-) -> Optional[pd.DataFrame]
+@staticmethod
+_ensure_directory_exists(path: str) -> None
 ```
-Merges multiple CSV files into a single DataFrame based on shared columns.
 
-#### Parameters
-- **`matching_id`** (`Union[str, List[str]]`):  
-  ID or pattern used to identify files for merging.
-- **`variables`** (`List[str]`):  
-  List of variables to include in the merge.
-- **`required_columns`** (`Optional[Set[str]]`, default=`None`):  
-  Required columns that must be present in the DataFrame.
+Helper function to ensure a directory exists, creates if not.
 
-#### Returns
-- **`Optional[pd.DataFrame]`**:  
-  Merged DataFrame or `None` if no valid data is found.
+### `_ensure_bucket`
+
+```python
+_ensure_bucket() -> None
+```
+
+Ensure the bucket exists, or create it if necessary.
+
+### `calculate_md5`
+
+```python
+@staticmethod
+calculate_md5(file_path: str) -> str
+```
+
+Computes the MD5 hash of a file.
+
+### Parameters
+
+- `file_path` : `str`
+  - Path to the file for which to compute the MD5 hash.
+
+### Returns
+
+- `str`
+  - MD5 hash of the file.
+
+### `_get_current_date`
+
+```python
+@staticmethod
+_get_current_date() -> str
+```
+
+Get the current system date, formatted as "DD-MMM-YYYY-HH-MM".
+
+### Returns
+
+- `str`
+  - Current date in formatted datetime format.
+
+### `upload_directory`
+
+```python
+upload_directory(remote_prefix: str = "", check_for_existence: bool = False) -> None
+```
+
+Recursively uploads a directory to MinIO with real-time logging.
+
+### Parameters
+
+- `remote_prefix` : `str`, default=`""`
+  - Prefix to use for remote paths in the bucket.
+- `check_for_existence` : `bool`, default=`False`
+  - If `True`, skip uploading files that already exist in the bucket with the same MD5 hash.
+
+### `_fetch_existing_files`
+
+```python
+_fetch_existing_files(remote_prefix: str) -> dict
+```
+
+Fetches existing files in the bucket with their ETags. Returns a dictionary: {remote_path: etag}
+
+### Parameters
+
+- `remote_prefix` : `str`
+  - Prefix to use for remote paths in the bucket.
+
+### Returns
+
+- `dict`
+  - Dictionary containing remote paths and their ETags.
+
+### `_upload_file`
+
+```python
+_upload_file(local_file_path: str, remote_path: str, check_for_existence: bool, existing_files: dict) -> bool
+```
+
+Uploads a single file with immediate logging.
+
+### Parameters
+
+- `local_file_path` : `str`
+  - Local path of the file to upload.
+- `remote_path` : `str`
+  - Remote path to save the file in the bucket.
+- `check_for_existence` : `bool`
+  - If `True`, skip uploading if the file already exists in the bucket with the same MD5 hash.
+- `existing_files` : `dict`
+  - Dictionary containing existing files and their ETags.
+
+### Returns
+
+- `bool`
+  - `True` if the file was successfully uploaded and verified, else `False`.
+
+### `delete_local_files`
+
+```python
+delete_local_files() -> None
+```
+
+Deletes local files after successful upload verification.
+
+### `_write_log_file`
+
+```python
+_write_log_file(filename: str, data: list) -> None
+```
+
+Writes a list of file links to a log file, ensuring each entry is on a new line.
+
+### Parameters
+
+- `filename` : `str`
+  - Path to the log file.
+- `data` : `list`
+  - List of file links to write to the log file.
 
 ---
+
+# DataProcessor
+
+## Overview
+
+The `DataProcessor` class is designed to handle the processing of GRIB files. It includes functionalities to decompress `.bz2` files, convert GRIB files to CSV format, and apply geographic filtering if required. The class ensures that necessary directories exist and provides methods to search for files, decompress them, and convert them to CSV.
+
+## Constructor
+
+```python
+DataProcessor(search_path: str, extraction_path: str, converted_files_path: str)
+```
+
+### Parameters
+
+- `search_path` : `str`
+  - Directory to search for GRIB files.
+- `extraction_path` : `str`
+  - Directory to save decompressed files.
+- `converted_files_path` : `str`
+  - Directory to save converted CSV files.
+
+## Methods
+
+### `_ensure_directory_exists`
+
+```python
+@staticmethod
+_ensure_directory_exists(directory: str) -> None
+```
+
+Ensures that the directory exists. If not, it creates the directory.
+
+### Parameters
+
+- `directory` : `str`
+  - Path to the directory to ensure.
+
+### `_decompress_files`
+
+```python
+_decompress_files(file_to_decompress: str) -> str
+```
+
+Decompresses a `.bz2` file and returns the path to the decompressed file.
+
+### Parameters
+
+- `file_to_decompress` : `str`
+  - Path to the `.bz2` file to decompress.
+
+### Returns
+
+- `str`
+  - Path to the decompressed file.
+
+### `_get_decompressed_file_path`
+
+```python
+_get_decompressed_file_path(file_to_decompress: str) -> str
+```
+
+Generates the path for the decompressed file.
+
+### Parameters
+
+- `file_to_decompress` : `str`
+  - Path to the `.bz2` file to decompress.
+
+### Returns
+
+- `str`
+  - Path to the decompressed file.
+
+### `_read_grib_to_dataframe`
+
+```python
+_read_grib_to_dataframe(decompressed_file_path: str, apply_geo_filtering: bool, start_lat: float | None, end_lat: float | None, start_lon: float | None, end_lon: float | None) -> None
+```
+
+Converts the decompressed GRIB file to a DataFrame and saves it as a CSV file.
+
+### Parameters
+
+- `decompressed_file_path` : `str`
+  - Path to the decompressed GRIB file.
+- `apply_geo_filtering` : `bool`
+  - Whether to apply geographic filtering.
+- `start_lat` : `float | None`
+  - Minimum latitude for filtering.
+- `end_lat` : `float | None`
+  - Maximum latitude for filtering.
+- `start_lon` : `float | None`
+  - Minimum longitude for filtering.
+- `end_lon` : `float | None`
+  - Maximum longitude for filtering.
+
+### `_filter_by_coordinates`
+
+```python
+@staticmethod
+_filter_by_coordinates(df: pd.DataFrame, start_lat: float, end_lat: float, start_lon: float, end_lon: float) -> pd.DataFrame
+```
+
+Filters the DataFrame to include only rows within the given latitude and longitude range.
+
+### Parameters
+
+- `df` : `pd.DataFrame`
+  - Input DataFrame.
+- `start_lat` : `float`
+  - Minimum latitude.
+- `end_lat` : `float`
+  - Maximum latitude.
+- `start_lon` : `float`
+  - Minimum longitude.
+- `end_lon` : `float`
+  - Maximum longitude.
+
+### Returns
+
+- `pd.DataFrame`
+  - Filtered DataFrame.
+
+### `_save_as_csv`
+
+```python
+@staticmethod
+_save_as_csv(df: pd.DataFrame, csv_file_path: str) -> None
+```
+
+Saves a DataFrame as a CSV file.
+
+### Parameters
+
+- `df` : `pd.DataFrame`
+  - DataFrame to save.
+- `csv_file_path` : `str`
+  - Path to save the CSV file.
+
+### `_get_converted_file_path`
+
+```python
+_get_converted_file_path(decompressed_file_path: str) -> str
+```
+
+Generates the path for the CSV file based on the decompressed file path.
+
+### Parameters
+
+- `decompressed_file_path` : `str`
+  - Path to the decompressed GRIB file.
+
+### Returns
+
+- `str`
+  - Path to the CSV file.
+
+### `flatten_list`
+
+```python
+flatten_list(nested_list: list | str) -> list[str]
+```
+
+Recursively flattens a nested list of filenames.
+
+### Parameters
+
+- `nested_list` : `list | str`
+  - Nested list or string to flatten.
+
+### Returns
+
+- `list[str]`
+  - Flattened list of filenames.
+
+### `_search_directory`
+
+```python
+_search_directory(directory: str, include_pattern: list[str], exclude_pattern: list[str], name_startswith: str, name_endswith: str) -> list[str]
+```
+
+Recursively searches for matching files in the given directory.
+
+### Parameters
+
+- `directory` : `str`
+  - Directory to search.
+- `include_pattern` : `list[str]`
+  - List of substrings; at least one must be in the filename.
+- `exclude_pattern` : `list[str]`
+  - List of substrings; filenames with any of these are excluded.
+- `name_startswith` : `str`
+  - String that filenames must start with.
+- `name_endswith` : `str`
+  - String that filenames must end with.
+
+### Returns
+
+- `list[str]`
+  - List of matching filenames.
+
+### `get_filenames`
+
+```python
+get_filenames(name_startswith: str = "", name_endswith: str = "", include_pattern: list[str] | None = None, exclude_pattern: list[str] | None = None) -> list
+```
+
+Searches for files in the search path and includes subdirectory search if needed.
+
+### Parameters
+
+- `name_startswith` : `str`, default=`""`
+  - String that filenames must start with.
+- `name_endswith` : `str`, default=`""`
+  - String that filenames must end with.
+- `include_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; at least one must be in the filename.
+- `exclude_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; filenames with any of these are excluded.
+
+### Returns
+
+- `list`
+  - Sorted, filtered list of filenames.
+
+### `get_csv`
+
+```python
+get_csv(file_names: list[str], apply_geo_filtering: bool = False, start_lat: float | None = None, end_lat: float | None = None, start_lon: float | None = None, end_lon: float | None = None) -> None
+```
+
+Processes GRIB files: decompresses and converts them to CSV.
+
+### Parameters
+
+- `file_names` : `list[str]`
+  - List of file names to process.
+- `apply_geo_filtering` : `bool`, default=`False`
+  - Whether to filter data based on geographic coordinates.
+- `start_lat` : `float | None`, default=`None`
+  - Minimum latitude for filtering.
+- `end_lat` : `float | None`, default=`None`
+  - Maximum latitude for filtering.
+- `start_lon` : `float | None`, default=`None`
+  - Minimum longitude for filtering.
+- `end_lon` : `float | None`, default=`None`
+  - Maximum longitude for filtering.
+
+### Returns
+
+- `None`
+
+---
+
+# DataEditor
+
+## Overview
+
+The `DataEditor` class is designed to handle the processing and merging of CSV files. It includes functionalities to validate columns, filter DataFrames, parse datetime columns, merge multiple DataFrames, and handle variable mappings. The class ensures that necessary columns exist and provides methods to read, filter, and merge CSV files based on specified criteria.
+
+## Constructor
+
+```python
+DataEditor(files_path: str, required_columns: set[str] | None = None, join_method: str = 'inner', sep: str = ',', index_col: str | None = None, mapping_dictionary: dict[str, str] | None = None, additional_pattern_selection: dict[str, list[int] | int] | None = None)
+```
+
+### Parameters
+
+- `files_path` : `str`
+  - Root path of the CSV files.
+- `required_columns` : `set[str] | None`, default=`None`
+  - Required columns in DataFrame. Defaults to `{'latitude', 'longitude', 'valid_time'}`.
+- `join_method` : `str`, default=`'inner'`
+  - Method to use for merging DataFrames.
+- `sep` : `str`, default=`,``
+  - CSV separator.
+- `index_col` : `str | None`, default=`None`
+  - Column to be used as index.
+- `mapping_dictionary` : `dict[str, str] | None`, default=`None`
+  - Dictionary mapping variable names to actual CSV column names.
+- `additional_pattern_selection` : `dict[str, list[int] | int] | None`, default=`None`
+  - Dictionary specifying additional patterns for known variables.
+
+## Methods
 
 ### `_validate_columns_exist`
+
 ```python
-_validate_columns_exist(
-    df: pd.DataFrame,
-    required_columns: Set[str],
-    variable: str
-) -> bool
+_validate_columns_exist(df: pd.DataFrame, required_columns: set[str], variable: str) -> bool
 ```
-Ensures that all required columns exist in the DataFrame.
 
-#### Parameters
-- **`df`** (`pd.DataFrame`):  
-  DataFrame to validate.
-- **`required_columns`** (`Set[str]`):  
-  Set of required column names.
-- **`variable`** (`str`):  
-  Variable being processed.
+Validates that the required columns exist in the DataFrame.
 
-#### Returns
-- **`bool`**:  
-  `True` if all required columns exist, otherwise `False`.
+### Parameters
 
----
+- `df` : `pd.DataFrame`
+  - DataFrame to validate.
+- `required_columns` : `set[str]`
+  - Required columns in DataFrame.
+- `variable` : `str`
+  - Variable name being processed.
+
+### Returns
+
+- `bool`
+  - `True` if all required columns exist, else `False`.
 
 ### `_filter_dataframe`
+
 ```python
-_filter_dataframe(
-    df: pd.DataFrame,
-    required_columns: Set[str],
-    variable: str
-) -> pd.DataFrame
+@staticmethod
+_filter_dataframe(df: pd.DataFrame, required_columns: set, variable: str) -> pd.DataFrame
 ```
-Filters the DataFrame to retain only required columns.
 
-#### Parameters
-- **`df`** (`pd.DataFrame`):  
-  DataFrame to filter.
-- **`required_columns`** (`Set[str]`):  
-  Required columns to retain.
-- **`variable`** (`str`):  
-  Variable being processed.
+Filters the DataFrame to keep only required columns.
 
-#### Returns
-- **`pd.DataFrame`**:  
-  Filtered DataFrame.
+### Parameters
 
----
+- `df` : `pd.DataFrame`
+  - DataFrame to filter.
+- `required_columns` : `set`
+  - Required columns to keep.
+- `variable` : `str`
+  - Variable name being processed.
+
+### Returns
+
+- `pd.DataFrame`
+  - Filtered DataFrame.
 
 ### `_parse_datetime`
+
 ```python
+@staticmethod
 _parse_datetime(df: pd.DataFrame) -> pd.DataFrame
 ```
-Attempts to parse the `'valid_time'` column as datetime.
 
-#### Parameters
-- **`df`** (`pd.DataFrame`):  
-  DataFrame containing the `'valid_time'` column.
+Attempts to parse the 'valid_time' column to datetime.
 
-#### Returns
-- **`pd.DataFrame`**:  
-  DataFrame with parsed datetime values.
+### Parameters
 
----
+- `df` : `pd.DataFrame`
+  - DataFrame containing the 'valid_time' column.
+
+### Returns
+
+- `pd.DataFrame`
+  - DataFrame with the parsed 'valid_time' column.
 
 ### `_merge_dataframes`
+
 ```python
-_merge_dataframes(
-    df1: pd.DataFrame,
-    df2: pd.DataFrame,
-    merge_on: Set[str]
-) -> pd.DataFrame
+_merge_dataframes(df1: pd.DataFrame, df2: pd.DataFrame, merge_on: set[str]) -> pd.DataFrame
 ```
-Merges two DataFrames on specified columns.
 
-#### Parameters
-- **`df1`** (`pd.DataFrame`):  
-  First DataFrame.
-- **`df2`** (`pd.DataFrame`):  
-  Second DataFrame.
-- **`merge_on`** (`Set[str]`):  
-  Columns to merge on.
+Merges two DataFrames based on specified columns.
 
-#### Returns
-- **`pd.DataFrame`**:  
-  Merged DataFrame.
+### Parameters
 
----
+- `df1` : `pd.DataFrame`
+  - First DataFrame to merge.
+- `df2` : `pd.DataFrame`
+  - Second DataFrame to merge.
+- `merge_on` : `set[str]`
+  - Columns to merge on.
+
+### Returns
+
+- `pd.DataFrame`
+  - Merged DataFrame.
 
 ### `_get_csv_file`
+
 ```python
-_get_csv_file(variable: str) -> List[str]
+_get_csv_file(variable: str) -> list[str]
 ```
-Retrieves CSV file paths for a given variable.
 
-#### Parameters
-- **`variable`** (`str`):  
-  Name of the variable.
+Function to get CSV file path for a variable.
 
-#### Returns
-- **`List[str]`**:  
-  List of file paths.
+### Parameters
 
----
+- `variable` : `str`
+  - Variable name to search for.
+
+### Returns
+
+- `list[str]`
+  - List of CSV file paths for the variable.
 
 ### `_filter_file_names`
+
 ```python
-_filter_file_names(
-    filenames: List[str],
-    name_startswith: str = "icon-d2_germany",
-    name_endswith: str = ".csv",
-    include_pattern: Union[str, List[str]] = None,
-    exclude_pattern: List[str] = None,
-    variable: Optional[str] = None
-) -> Optional[List[str]]
+_filter_file_names(filenames: list[str], name_startswith: str = "icon-d2_germany", name_endswith: str = ".csv", include_pattern: str | list[str] | None = None, exclude_pattern: list[str] | None = None, variable: str | None = None) -> list[str] | None
 ```
-Filters filenames based on inclusion/exclusion patterns.
 
-#### Parameters
-- **`filenames`** (`List[str]`):  
-  List of filenames to filter.
-- **`name_startswith`** (`str`, default=`"icon-d2_germany"`):  
-  Prefix that filenames must start with.
-- **`name_endswith`** (`str`, default=`".csv"`):  
-  Suffix that filenames must end with.
-- **`include_pattern`** (`Union[str, List[str]]`, optional, default=`None`):  
-  Substring(s) that must be present.
-- **`exclude_pattern`** (`List[str]`, optional, default=`[]`):  
-  Substrings to exclude.
-- **`variable`** (`Optional[str]`, optional, default=`None`):  
-  Variable name being processed.
+Filters filenames based on start, end, inclusion, exclusion patterns, and additional pattern selection.
 
-#### Returns
-- **`Optional[List[str]]`**:  
-  Filtered filenames or `None` if no matches are found.
+### Parameters
 
----
+- `filenames` : `list[str]`
+  - List of filenames to filter.
+- `name_startswith` : `str`, default=`"icon-d2_germany"`
+  - String that filenames must start with.
+- `name_endswith` : `str`, default=`".csv"`
+  - String that filenames must end with.
+- `include_pattern` : `str | list[str] | None`, default=`None`
+  - A substring or a list of substrings; at least one must be in the filename.
+- `exclude_pattern` : `list[str] | None`, default=`None`
+  - List of substrings; filenames with any of these are excluded.
+- `variable` : `str | None`, default=`None`
+  - Variable name being processed.
+
+### Returns
+
+- `list[str] | None`
+  - The selected filename(s) or `None` if no match is found.
 
 ### `_variable_mapping`
+
 ```python
-_variable_mapping(variables: List[str]) -> List[str]
+_variable_mapping(variables: list[str]) -> list[str]
 ```
-Maps variable names to actual CSV column names.
 
-#### Parameters
-- **`variables`** (`List[str]`):  
-  List of variables to map.
+Maps manual variable names to actual CSV column names. Maintains the original order of variables.
 
-#### Returns
-- **`List[str]`**:  
-  Mapped column names.
+### Parameters
 
----
+- `variables` : `list[str]`
+  - List of variable names to map.
+
+### Returns
+
+- `list[str]`
+  - List of mapped variable names.
 
 ### `_read_dataframe_from_csv`
+
 ```python
-_read_dataframe_from_csv(csv_file: str) -> Optional[pd.DataFrame]
+_read_dataframe_from_csv(csv_file: str) -> pd.DataFrame | None
 ```
+
 Reads a CSV file into a DataFrame with error handling.
 
-#### Parameters
-- **`csv_file`** (`str`):  
-  Path to the CSV file.
+### Parameters
 
-#### Returns
-- **`Optional[pd.DataFrame]`**:  
-  Loaded DataFrame or `None` if an error occurs.
+- `csv_file` : `str`
+  - Path to the CSV file.
 
----
+### Returns
+
+- `pd.DataFrame | None`
+  - DataFrame if successful, else `None`.
+
+### `merge_dfs`
+
+```python
+merge_dfs(time_step: str | int, variables: list[str], required_columns: set[str] | None = None) -> pd.DataFrame | None
+```
+
+Merges multiple CSV files into a DataFrame based on shared columns.
+
+### Parameters
+
+- `time_step` : `str | int`
+  - Time step identifier.
+- `variables` : `list[str]`
+  - List of variable names to merge.
+- `required_columns` : `set[str] | None`, default=`None`
+  - Required columns in DataFrame.
+
+### Returns
+
+- `pd.DataFrame | None`
+  - Merged DataFrame if successful, else `None`.
 
 ### `_extract_additional_pattern`
+
 ```python
-_extract_additional_pattern(filename: str) -> Optional[int]
+@staticmethod
+_extract_additional_pattern(filename: str) -> int | None
 ```
-Extracts an additional numeric pattern from a filename.
 
-#### Parameters
-- **`filename`** (`str`):  
-  Filename to process.
+Extracts the additional pattern from a filename. Returns an integer if a valid pattern exists; otherwise, `None`.
 
-#### Returns
-- **`Optional[int]`**:  
-  Extracted pattern or `None` if not found.
+### Parameters
+
+- `filename` : `str`
+  - Filename to extract the pattern from.
+
+### Returns
+
+- `int | None`
+  - Extracted pattern as an integer or `None` if no pattern is found.
 
 ---
 
-# Utility Functions
+## Helper Functions
 
-## `get_formatted_time_stamp`
+### `get_formatted_time_stamp`
+
 ```python
 get_formatted_time_stamp(date: datetime) -> str
 ```
-Formats a given `datetime` object into a string with underscores as separators.
+
+Converts a `datetime` object to a formatted string with underscores replacing hyphens, colons, and spaces.
 
 ### Parameters
-- **`date`** (`datetime`):  
-  Datetime object to be formatted.
+
+- `date` : `datetime`
+  - The `datetime` object to format.
 
 ### Returns
-- **`str`**:  
-  Formatted string in the `YYYY_MM_DD_HH_MM` format.
+
+- `str`
+  - Formatted string with underscores replacing hyphens, colons, and spaces.
+
+### Example
+
+```python
+from datetime import datetime
+
+date = datetime(2023, 10, 5, 14, 30)
+formatted_date = get_formatted_time_stamp(date)
+print(formatted_date)  # Output: "2023_10_05_14_30"
+```
+
+### `get_current_date`
+
+```python
+get_current_date(utc: bool = True, time_of_day: bool = False) -> datetime
+```
+
+Get the current system date, formatted as "DD-MMM-YYYY-HH:MM".
+
+### Parameters
+
+- `utc` : `bool`, default=`True`
+  - If `True`, return date with UTC time; otherwise, return system time.
+- `time_of_day` : `bool`, default=`False`
+  - If `True`, return date with time; otherwise, return only the date.
+
+### Returns
+
+- `datetime`
+  - Current date (with or without time) in formatted datetime format.
+
+### Example
+
+```python
+from datetime import datetime
+
+# Get current UTC date with time
+current_date_utc = get_current_date(utc=True, time_of_day=True)
+print(current_date_utc)  # Output: "05-Oct-2023-14:30"
+
+# Get current system date without time
+current_date_system = get_current_date(utc=False, time_of_day=False)
+print(current_date_system)  # Output: "05-Oct-2023-00:00"
+```
 
 ---
-
-## `get_current_date`
-```python
-get_current_date(
-    utc: bool = True,
-    time_of_day: bool = False
-) -> datetime
-```
-Retrieves the current system date and time, formatted as `"DD-MMM-YYYY-HH:MM"`, and returns a `datetime` object.
-
-### Parameters
-- **`utc`** (`bool`, default=`True`):  
-  If `True`, returns the current UTC date and time.  
-  If `False`, returns the local system date and time.
-- **`time_of_day`** (`bool`, default=`False`):  
-  If `True`, includes the exact time in the returned `datetime` object.  
-  If `False`, the time is set to midnight (`00:00`).
-
-### Returns
-- **`datetime`**:  
-  `datetime` object representing the current date, optionally including time.
