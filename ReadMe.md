@@ -23,6 +23,10 @@ pip install -e .
 
 ## Usage
 
+### Documentation
+
+You can find the documentation for this project [here](./docs/documentation.md).
+
 ### DWDDownloader: Download Data from DWD
 
 The `DWDDownloader` class allows you to download weather forecast files from the DWD open data server.
