@@ -46,7 +46,11 @@ dwd_downloader = DWDDownloader(
 )
 
 # Fetch download links
-dwd_downloader.get_links(exclude_pattern=["icosahedral"])
+dwd_downloader.get_links(
+    exclude_pattern=["icosahedral"],
+    min_timestamp=0,
+    max_timestamp=10
+)
 
 # Download files
 dwd_downloader.download_files()
