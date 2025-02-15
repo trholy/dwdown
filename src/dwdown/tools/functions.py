@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 from datetime import datetime
 
 
@@ -14,18 +15,32 @@ def get_formatted_time_stamp(
 
 def get_current_date(
         utc: bool = True,
-        time_of_day: bool = False
-):
-    """Get current system date."""
-    if utc:
-        now = datetime.utcnow()
+        time_of_day: bool = False,
+        overwrite: bool = False,
+        date_string: Optional[str] = None
+) -> datetime:
+    """
+    Get the current system date and time.
+
+    Parameters:
+        utc (bool): Whether to use UTC time. Defaults to True.
+        time_of_day (bool): Whether to retain the current time of day.
+         Defaults to False.
+        overwrite (bool): Whether to use a provided date string instead
+         of the current date.
+        date_string (Optional[str]): The date string to use if overwrite
+         is True. Must be in 'YYYY-MM-DD HH:MM:SS' format.
+
+    Returns:
+        datetime: The resulting datetime object.
+    """
+
+    if overwrite:
+        if date_string is None:
+            raise ValueError(
+                "date_string must be provided when overwrite is True.")
+        dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
     else:
-        now = datetime.now()
+        dt = datetime.utcnow() if utc else datetime.now()
 
-    # Format as string and parse back to enforce "DD-MMM-YYYY-HH:MM" format
-    formatted_str = now.strftime("%d-%b-%Y-%H:%M")
-    formatted_datetime = datetime.strptime(formatted_str, "%d-%b-%Y-%H:%M")
-
-    # If time_of_day is False, reset time to midnight
-    return formatted_datetime if time_of_day\
-        else formatted_datetime.replace(hour=0, minute=0)
+    return dt if time_of_day else dt.replace(hour=0, minute=0)
