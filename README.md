@@ -48,8 +48,8 @@ dwd_downloader = DWDDownloader(
 # Fetch download links
 dwd_downloader.get_links(
     exclude_pattern=["icosahedral"],
-    min_timestamp=0,
-    max_timestamp=10
+    min_timestep=0,
+    max_timestep=10
 )
 
 # Download files

@@ -244,38 +244,38 @@ class DWDDownloader:
         return [self.url + name for name in filtered_filenames]
 
     @staticmethod
-    def _process_timestamps(
-            min_timestamp: str | int | None = None,
-            max_timestamp: str | int | None = None,
+    def _process_timesteps(
+            min_timestep: str | int | None = None,
+            max_timestep: str | int | None = None,
             include_pattern: list | None = None
     ) -> list[str]:
         """
-        Generates a list of formatted timestamp patterns within a given range.
+        Generates a list of formatted timestep patterns within a given range.
 
         Parameters:
         -----------
-        min_timestamp : Union[str, int, None], optional
-            The minimum timestamp value (default is 0 if None).
-        max_timestamp : Union[str, int, None], optional
-            The maximum timestamp value (default is 48 if None).
+        min_timestep : Union[str, int, None], optional
+            The minimum timestep value (default is 0 if None).
+        max_timestep : Union[str, int, None], optional
+            The maximum timestep value (default is 48 if None).
         include_pattern : Optional[List[str]], optional
-            A list to which the generated timestamp patterns will be added.
+            A list to which the generated timestep patterns will be added.
             If None, a new list is created.
 
         Returns:
         --------
         List[str]
-            A list of formatted timestamp patterns (e.g., "_000_",
+            A list of formatted timestep patterns (e.g., "_000_",
              "_001_", ..., "_048_").
         """
         # Assign default values using `or`
-        min_timestamp = int(min_timestamp) if min_timestamp is not None else 0
-        max_timestamp = int(max_timestamp) if max_timestamp is not None else 48
+        min_timestep = int(min_timestep) if min_timestep is not None else 0
+        max_timestep = int(max_timestep) if max_timestep is not None else 48
 
         # Ensure they are integers
-        if isinstance(min_timestamp, int) and isinstance(max_timestamp, int):
+        if isinstance(min_timestep, int) and isinstance(max_timestep, int):
             temp = [f"_{str(t).zfill(3)}_" for t in
-                    range(min_timestamp, max_timestamp + 1)]
+                    range(min_timestep, max_timestep + 1)]
 
             # Use list concatenation instead of += (avoids nested lists)
             if isinstance(include_pattern, list):
@@ -291,8 +291,8 @@ class DWDDownloader:
             name_endswith: str = ".bz2",
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
-            min_timestamp: str | int | None = None,
-            max_timestamp: str | int | None = None,
+            min_timestep: str | int | None = None,
+            max_timestep: str | int | None = None,
     ) -> list[str]:
         """
         Main method to get all the download links after filtering filenames.
@@ -303,9 +303,9 @@ class DWDDownloader:
         if not filenames:
             return []
 
-        include_pattern = self._process_timestamps(
-            min_timestamp=min_timestamp,
-            max_timestamp=max_timestamp,
+        include_pattern = self._process_timesteps(
+            min_timestep=min_timestep,
+            max_timestep=max_timestep,
             include_pattern=include_pattern
         )
 
