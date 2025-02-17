@@ -39,7 +39,7 @@ def get_current_date(
         if date_string is None:
             raise ValueError(
                 "date_string must be provided when overwrite is True.")
-        dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+        dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     else:
         dt = datetime.utcnow() if utc else datetime.now()
 
