@@ -417,8 +417,8 @@ class DataEditor:
         self.index_col = index_col
         self.sep = sep
 
-        # Allow external mapping dictionary
-        self.mapping_dictionary = mapping_dictionary or {
+        # Standard mapping dictionary
+        standard_mapping = {
             'aswdifd_s': 'ASWDIFD_S',
             'aswdir_s': 'ASWDIR_S',
             'cape_ml': 'CAPE_ML',
@@ -477,6 +477,14 @@ class DataEditor:
             'w_so_ice': 'W_SO_ICE',
             'z0': 'fsr'
         }
+
+        # Create a copy of the standard mapping to avoid modifying the original
+        self.mapping_dictionary = standard_mapping.copy()
+
+        # If external mapping_dictionary is provided and is not None,
+        # update the standard mapping dictionary
+        if mapping_dictionary is not None:
+            self.mapping_dictionary.update(mapping_dictionary)
 
         self.additional_pattern_selection = additional_pattern_selection or {}
 
