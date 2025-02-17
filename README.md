@@ -18,6 +18,8 @@
 You can install `dwdown` via pip:
 
 ```bash
+git clone https://git.rz.uni-jena.de/to82lod/dwdown.git 
+
 pip install -e .
 ```
 
