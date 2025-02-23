@@ -4,7 +4,7 @@ import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, UTC
 
 import requests
 from lxml import html
@@ -167,7 +167,7 @@ class DWDDownloader:
         """
         # Get current datetime
         if utc:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
         else:
             now = datetime.now()
 
@@ -372,21 +372,16 @@ class DWDDownloader:
 
     def download_files(
             self,
-            check_for_existence: bool = False
+            check_for_existence: bool = False,
+            max_retries: int = 3
     ) -> None:
         """
         Downloads all files from the generated links using concurrency for
-        faster processing. If downloads fail and `self.restart_failed_downloads`
-        is enabled, retry them sequentially. Finally failed downloads are
-        stored in `self.finally_failed_files`.
+        faster processing. If downloads fail, retries up to `max_retries` times
+        before considering them as final failures.
 
-        :param check_for_existence: If True, skips download if
-         the file already exists
-
-        - `self.failed_files` keeps track of initial failures.
-        - Successfully retried files are removed from `self.failed_files`.
-        - Downloads failing after retry are stored in
-        `self.finally_failed_files.
+        :param check_for_existence: If True, skips download if the file already exists
+        :param max_retries: Number of retry attempts before marking a file as failed
         """
         if not self.full_links:
             self.logger.warning("No files to download."
@@ -418,31 +413,38 @@ class DWDDownloader:
             f"{len(self.failed_files)} downloads failed initially.")\
             if self.failed_files else None
 
-        # Step 2: Retry Failed Downloads Sequentially (if enabled)
+        # Step 2: Retry Failed Downloads with max_retries
         if self.restart_failed_downloads and self.failed_files:
             self.logger.warning(
                 f"Retrying {len(self.failed_files)}"
-                f" failed downloads sequentially...")
+                f" failed downloads up to {max_retries} times...")
+
+            remaining_failed_files = []  # Temporary storage for files that still fail after retries
 
             for link in self.failed_files[
                         :]:  # Iterate over a copy to allow modification
-                try:
-                    # If retry succeeds
-                    if self._download_file(link, check_for_existence):
-                        self.downloaded_files.append(link)
-                        self.failed_files.remove(
-                            link)  # Remove from failed list
-                    else:
-                        self.finally_failed_files.append(link)
-                except Exception as e:
-                    self.logger.error(f"Retry failed for {link}: {e}")
-                    self.finally_failed_files.append(link)
+                retry_count = 0
+                while retry_count < max_retries:
+                    try:
+                        if self._download_file(link, check_for_existence):
+                            self.downloaded_files.append(link)
+                            self.failed_files.remove(link)  # Remove from failed list
+                            break  # Exit retry loop if download succeeds
+                        retry_count += 1
+                    except Exception as e:
+                        self.logger.error(f"Retry {retry_count} failed for {link}: {e}")
+                        retry_count += 1
+
+                if retry_count == max_retries:
+                    remaining_failed_files.append(link)
+
+            self.finally_failed_files.extend(remaining_failed_files)
 
         # Log final results
         if self.finally_failed_files:
             self.logger.error(
                 f"Failed to download {len(self.finally_failed_files)}"
-                f" files after retries.")
+                f" files after {max_retries} retries.")
         else:
             self.logger.info("All downloads completed successfully"
                              " after retries.")
