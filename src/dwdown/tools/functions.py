@@ -1,6 +1,6 @@
 import re
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 def get_formatted_time_stamp(
@@ -41,6 +41,6 @@ def get_current_date(
                 "date_string must be provided when overwrite is True.")
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     else:
-        dt = datetime.utcnow() if utc else datetime.now()
+        dt = datetime.now(UTC) if utc else datetime.now()
 
-    return dt if time_of_day else dt.replace(hour=0, minute=0)
+    return dt if time_of_day else dt.replace(hour=0, minute=0, second=0, microsecond=0)
