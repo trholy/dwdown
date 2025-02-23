@@ -8,7 +8,7 @@ setup(
     description="Download weather forecasts from DWD",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url="https://github.com/yourusername/dwdown",
+    url="https://git.rz.uni-jena.de/to82lod/dwdown",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
