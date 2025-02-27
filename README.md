@@ -5,10 +5,11 @@
 ## Features
 
 - **DWDDownloader**: Fetch weather forecast data from the DWD open data server.
-- **MinioDownloader**: Download files from a MinIO object storage server.
+- **MinioDownloader**: Download files from a [MinIO object storage server](https://github.com/minio/minio).
 - **MinioUploader**: Upload downloaded data to a MinIO object storage server with parallel uploads and data integrity checks.
 - **DataProcessor**: Extract, convert and filter data for further analysis.
 - **DataEditor**: Filter and merge CSV data.
+- **Notifier**: Receive status messages of downloads, uploads, and any errors from a [Gotify server](https://github.com/gotify).
 - **Logging**: Automatically log download and upload activities, and handle errors gracefully.
 - **Parallel Uploading**: Upload large datasets in parallel for faster performance.
 - **Automatic Bucket Creation**: Create MinIO buckets if they do not exist.
@@ -55,7 +56,10 @@ dwd_downloader.get_links(
 )
 
 # Download files
-dwd_downloader.download_files()
+dwd_downloader.download_files(
+    check_for_existence=True,
+    max_retries=3
+)
 
 # Print status after download
 print("Successfully downloaded files:", dwd_downloader.downloaded_files)
@@ -65,7 +69,7 @@ print("Finally failed downloads:", dwd_downloader.finally_failed_files)
 
 ### MinioUploader: Upload Data to MinIO
 
-The `MinioUploader` class helps upload files to a MinIO object storage server, ensuring data integrity with MD5 hash verification.
+The `MinioUploader` class helps upload files to a [MinIO object storage server](https://github.com/minio/minio), ensuring data integrity with MD5 hash verification.
 
 ```python
 from dwdown.upload import MinioUploader
@@ -93,7 +97,7 @@ print("Upload might be corrupted:", uploader.corrupted_files)
 
 ### MinioDownloader: Download Data from MinIO
 
-The `MinioDownloader` class helps you download files from a MinIO object storage server.
+The `MinioDownloader` class helps you download files from a [MinIO object storage server](https://github.com/minio/minio).
 
 ```python
 from dwdown.download import MinioDownloader
@@ -195,6 +199,52 @@ df = data_editor.merge_dfs(
 print("Processed DataFrame:", df)
 ```
 
+### Notifier: Send Status Updates
+
+The `Notifier` class keeps you informed about the status of downloads, uploads, and any errors via a [Gotify server](https://github.com/gotify).
+
+```python
+from minio import Minio
+from dwdown.notify import Notifier
+
+# Initialize Notifier
+notifier = Notifier(
+    server_url="your-gotify-sever.com",
+    token="your-access-token",
+    priority=5,
+    secure=False  # Set to True if your MinIO server is HTTPS
+)
+
+# Initialize minio client
+minio_client = Minio(
+    endpoint="your-minio-sever.com",
+    access_key="your-access-key",
+    secret_key="your-secret-key",
+    secure=False  # Set to True if your MinIO server is HTTPS
+)
+
+# List all buckets
+buckets = minio_client.list_buckets()
+
+status_dict = {}
+
+for bucket in buckets:
+    bucket_name = bucket.name
+    print(f"Processing bucket: {bucket_name}")
+
+    # List all objects in the bucket
+    objects = minio_client.list_objects(bucket_name, recursive=True)
+
+    # Get number of objects in the bucket
+    status_dict[bucket_name] = [len([obj.object_name for obj in objects])]
+
+# Send notification
+notifier.send_notification(
+    message=status_dict,
+    script_name="download-VM"
+)
+```
+
 ## Directory Structure
 
 The package structure is as follows:
@@ -206,6 +256,9 @@ dwdown/
 │   │   ├── __init__.py
 │   │   ├── downloader/
 │   │   │   ├── download.py
+│   │   │   ├── __init__.py
+│   │   ├── notify/
+│   │   │   ├── notifier.py
 │   │   │   ├── __init__.py
 │   │   ├── uploader/
 │   │   │   ├── upload.py
@@ -221,6 +274,7 @@ dwdown/
 │   ├── dwd_merging_test.py
 │   ├── dwd_scraper_test.py
 │   ├── minio_downloader_test.py
+│   ├── notifier_test.py
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
