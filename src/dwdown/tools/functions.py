@@ -1,6 +1,13 @@
 import re
+import sys
+from datetime import datetime
 from typing import Optional
-from datetime import datetime, UTC
+
+if sys.version_info >= (3, 11):
+    from datetime import UTC
+else:
+    from datetime import timezone
+    UTC = timezone.utc
 
 
 def get_formatted_time_stamp(
@@ -42,5 +49,8 @@ def get_current_date(
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     else:
         dt = datetime.now(UTC) if utc else datetime.now()
+        dt = dt.replace(tzinfo=None) if utc else dt
 
-    return dt if time_of_day else dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    return dt if time_of_day else dt.replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
