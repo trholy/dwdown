@@ -1,6 +1,6 @@
 # dwdown
 
-`dwdown` is a Python package designed to download weather forecast data from the Deutscher Wetterdienst (DWD), process it, and upload it to a MinIO object storage server. It supports downloading forecast files, uploading them to cloud storage, and processing them for analysis.
+`dwdown` is a Python package designed to download weather forecast data from the Deutscher Wetterdienst (DWD), process it, and upload it to a MinIO object storage server. It supports downloading forecast files, uploading them to cloud storage, and processing them for analysis. Furthermore it keeps you informed about the status of downloads, uploads, and any errors.
 
 ## Features
 
@@ -21,7 +21,7 @@ You can install `dwdown` via pip:
 ```bash
 git clone https://git.rz.uni-jena.de/to82lod/dwdown.git 
 
-pip install -e .
+pip install .
 ```
 
 ## Usage
