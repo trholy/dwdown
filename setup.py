@@ -14,20 +14,19 @@ setup(
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=[
         "lxml>=5.3.0",
         "minio>=7.2.15",
         "pandas>=2.2.3",
         "requests>=2.32.3",
-        "xarray>=2025.1.1",
+        "xarray>=2024.7.0",
     ],
     extras_require={
         "dev": [
