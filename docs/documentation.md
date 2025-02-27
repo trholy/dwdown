@@ -236,7 +236,7 @@ Downloads a single file from the provided URL if it does not already exist.
 #### `download_files`
 
 ```python
-download_files(check_for_existence: bool = False) -> None
+download_files(check_for_existence: bool = False, max_retries: int = 3) -> None
 ```
 
 Downloads all files from the generated links using concurrency for faster processing. If downloads fail and `self.restart_failed_downloads` is enabled, retry them sequentially. Finally failed downloads are stored in `self.finally_failed_files`.
@@ -245,6 +245,8 @@ Downloads all files from the generated links using concurrency for faster proces
 
 - `check_for_existence` : `bool`, default=`False`
   - If `True`, skips download if the file already exists.
+- `max_retries` : `int`, default=3
+  - Number of retry attempts before marking a file as failed.
 
 #### `_log_name_formatting`
 
@@ -1130,9 +1132,98 @@ Extracts the additional pattern from a filename. Returns an integer if a valid p
 
 ---
 
-### Helper Functions
+## Notifier
 
-#### `get_formatted_time_stamp`
+### Overview
+
+The `Notifier` class is designed to send messages to a Gotify server using HTTP(S) requests. It provides methods to initialize the notifier with server details and authentication token, and to send notifications with customizable priority and content.
+
+### Constructor
+
+```python
+Notifier(server_url: str, token: str, priority: int = 5, secure: bool = False)
+```
+
+#### Parameters
+
+- `server_url` : `str`
+  - The URL of the Gotify server.
+- `token` : `str`
+  - Authentication token for the server.
+- `priority` : `int`, default=5
+  - Message priority level.
+- `secure` : `bool`, default=False
+  - Whether to use HTTPS.
+
+### Methods
+
+#### send_notification
+
+```python
+send_notification(message: Union[list[str], str, dict[str, list[str]]], script_name: Optional[str] = None, title: Optional[str] = None) -> None
+```
+
+Sends a notification to the Gotify server.
+
+##### Parameters
+
+- `message` : `Union[list[str], str, dict[str, list[str]]]`
+  - A single message, a list of messages, or a dictionary with categorized messages.
+- `script_name` : `Optional[str]`, default=None
+  - The name of the script.
+- `title` : `Optional[str]`, default=None
+  - The title of the notification.
+
+##### Returns
+
+- `None`
+
+#### format_dict_message
+
+```python
+@staticmethod
+format_dict_message(script_name: Optional[str], msg_dict: dict[str, list[str]]) -> str
+```
+
+Formats a dictionary of messages into a structured string.
+
+##### Parameters
+
+- `script_name` : `Optional[str]`, default=None
+  - The name of the script.
+- `msg_dict` : `dict[str, list[str]]`
+  - A dictionary where keys are categories and values are lists of messages.
+
+##### Returns
+
+- `str`
+  - A formatted string representation of the dictionary.
+
+#### parse_message_input
+
+```python
+parse_message_input(script_name: Optional[str], msg_input: Union[list[str], str, dict[str, list[str]]]) -> str
+```
+
+Parses input message, ensuring it's properly formatted for notification.
+
+##### Parameters
+
+- `script_name` : `Optional[str]`, default=None
+  - The name of the script.
+- `msg_input` : `Union[list[str], str, dict[str, list[str]]]`
+  - The message input, which can be a string, a list of strings, or a dictionary.
+
+##### Returns
+
+- `str`
+  - A formatted string ready to be sent as a notification.
+
+---
+
+## Helper Functions
+
+### `get_formatted_time_stamp`
 
 ```python
 get_formatted_time_stamp(date: datetime) -> str
@@ -1140,17 +1231,17 @@ get_formatted_time_stamp(date: datetime) -> str
 
 Converts a `datetime` object to a formatted string with underscores replacing hyphens, colons, and spaces.
 
-#### Parameters
+### Parameters
 
 - `date` : `datetime`
   - The `datetime` object to format.
 
-#### Returns
+### Returns
 
 - `str`
   - Formatted string with underscores replacing hyphens, colons, and spaces.
 
-#### Example
+### Example
 
 ```python
 from datetime import datetime
