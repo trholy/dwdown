@@ -1160,7 +1160,7 @@ Notifier(server_url: str, token: str, priority: int = 5, secure: bool = False)
 #### send_notification
 
 ```python
-send_notification(message: Union[list[str], str, dict[str, list[str]]], script_name: Optional[str] = None, title: Optional[str] = None) -> None
+send_notification(message: Union[list[str], str, dict[str, list[str]]], script_name: Optional[str] = None, title: Optional[str] = None, priority: Optional[int] = None) -> None
 ```
 
 Sends a notification to the Gotify server.
@@ -1173,6 +1173,8 @@ Sends a notification to the Gotify server.
   - The name of the script.
 - `title` : `Optional[str]`, default=None
   - The title of the notification.
+- `priority` : `int`, default=None
+  - Message priority level.
 
 ##### Returns
 
