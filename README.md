@@ -5,8 +5,8 @@
 ## Features
 
 - **DWDDownloader**: Fetch weather forecast data from the DWD open data server.
-- **MinioDownloader**: Download files from a [MinIO object storage server](https://github.com/minio/minio).
-- **MinioUploader**: Upload downloaded data to a MinIO object storage server with parallel uploads and data integrity checks.
+- **MinioDownloader**: Download files from a S3 compatible / [MinIO object storage server](https://github.com/minio/minio).
+- **MinioUploader**: Upload downloaded data to a S3 compatible / MinIO object storage server with parallel uploads and data integrity checks.
 - **DataProcessor**: Extract, convert and filter data for further analysis.
 - **DataEditor**: Filter and merge CSV data.
 - **Notifier**: Receive status messages of downloads, uploads, and any errors from a [Gotify server](https://github.com/gotify).
@@ -309,6 +309,6 @@ Thomas R. Holy ([thomas.robert.holy@gmail.com](mailto:thomas.robert.holy@gmail.c
 
 ## Contributing
 
-If you’d like to contribute to the development of `dwdown`, feel free to fork the repository, create a branch for your feature or fix, and submit a pull request. Please make sure to run tests and ensure the code follows the style guide.
+If you’d like to contribute to the development of `dwdown`, feel free to fork the repository, create a branch for your feature or fix, and submit a pull request.
 
 ---
