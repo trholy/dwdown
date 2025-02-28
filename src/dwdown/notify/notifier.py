@@ -42,7 +42,8 @@ class Notifier:
             self,
             message: Union[list[str], str, dict[str, list[str]]],
             script_name: Optional[str] = None,
-            title: Optional[str] = None
+            title: Optional[str] = None,
+            priority: Optional[int] = None,
     ) -> None:
         """
         Sends a notification to the Gotify server.
@@ -51,6 +52,7 @@ class Notifier:
          or a dictionary with categorized messages.
         :param script_name: The name of the script.
         :param title: The title of the notification (optional).
+        :param priority: Message priority level (default: None).
         :return: None
         """
         headers = {"X-Gotify-Key": self.token}
@@ -67,7 +69,7 @@ class Notifier:
         payload = {
             "title": title,
             "message": full_message,
-            "priority": self.priority
+            "priority": priority or self.priority
         }
 
         try:
