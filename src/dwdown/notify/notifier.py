@@ -96,8 +96,8 @@ class Notifier:
         """
         message_list = []
         for category, values in msg_dict.items():
-            category_header = f"\n**{script_name} - {category}:**"\
-                if script_name else f"\n**{category}:**"
+            category_header = f"\n{script_name} - {category}"\
+                if script_name else f"\n{category}"
             message_list.append(category_header)
             if not all(isinstance(item, str) for item in values):
                 values = [str(item) for item in values]
@@ -124,7 +124,7 @@ class Notifier:
         elif isinstance(msg_input, list):
             msg_list = msg_input.copy()  # Avoid modifying the original list
             if script_name:
-                msg_list.insert(0, f"**{script_name}:**")
+                msg_list.insert(0, f"{script_name}")
             return "\n".join(msg_list)
         else:
             self.logger.error(
