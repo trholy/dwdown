@@ -32,8 +32,8 @@ class Notifier:
         :param priority: Message priority level (default: 5).
         :param secure: Whether to use HTTPS (default: False).
         """
-        self.server_url = f"https://{server_url}"\
-            if secure else f"http://{server_url}"
+        self.server_url = f"https://{server_url}/message"\
+            if secure else f"http://{server_url}/message"
         self.token = token
         self.priority = priority
         self.logger = logging.getLogger(__name__)
