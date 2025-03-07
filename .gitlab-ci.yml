@@ -15,11 +15,11 @@ pages:
     - mkdir -p docs/tools
     - mkdir -p docs/upload
     # Copy all Markdown files and images into the docs directory
-    - cp -r docs/download/. docs/download
-    - cp -r docs/notify/. docs/notify
-    - cp -r docs/processing/. docs/processing
-    - cp -r docs/tools/. docs/tools
-    - cp -r docs/upload/. docs/upload
+    - cp -r documentation/download/. docs/download
+    - cp -r documentation/notify/. docs/notify
+    - cp -r documentation/processing/. docs/processing
+    - cp -r documentation/tools/. docs/tools
+    - cp -r documentation/upload/. docs/upload
     - cp README.md docs/
     # Build MkDocs site
     - mkdocs build
