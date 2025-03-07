@@ -1,0 +1,21 @@
+site_name: dwdown Documentation
+theme:
+  name: material
+
+nav:
+  - Home: README.md
+  - Downloader Module:
+      - DWDDownloader: docs/download/DWDDownloader.md
+      - MinioDownloader: docs/download/MinioDownloader.md
+  - Uploader Module:
+      - MinioUploader: docs/upload/MinioUploader.md
+  - Processing Module:
+      - DataEditor: docs/processing/DataEditor.md
+      - DataProcessor: docs/processing/DataProcessor.md
+  - Notifier: docs/notify/Notifier.md
+  - Tools: docs/tools/functions.md
+
+# Ensure images are served correctly
+markdown_extensions:
+  - attr_list
+  - md_in_html
