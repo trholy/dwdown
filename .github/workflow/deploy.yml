@@ -3,7 +3,7 @@ name: Deploy MkDocs to GitHub Pages
 on:
   push:
     branches:
-      - main  # Runs when pushing to 'main' branch
+      - main  # Runs when pushing to the 'main' branch
 
 permissions:
   contents: read
@@ -42,10 +42,12 @@ jobs:
           cp README.md docs/
 
       - name: Build MkDocs Site
-        run: mkdocs build
+        run: |
+          mkdocs build
+          mv site public
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+          publish_dir: ./public
