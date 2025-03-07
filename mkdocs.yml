@@ -5,15 +5,15 @@ theme:
 nav:
   - Home: README.md
   - Downloader Module:
-      - DWDDownloader: docs/download/DWDDownloader.md
-      - MinioDownloader: docs/download/MinioDownloader.md
+      - DWDDownloader: download/DWDDownloader.md
+      - MinioDownloader: download/MinioDownloader.md
   - Uploader Module:
-      - MinioUploader: docs/upload/MinioUploader.md
+      - MinioUploader: upload/MinioUploader.md
   - Processing Module:
-      - DataEditor: docs/processing/DataEditor.md
-      - DataProcessor: docs/processing/DataProcessor.md
-  - Notifier: docs/notify/Notifier.md
-  - Tools: docs/tools/functions.md
+      - DataEditor: processing/DataEditor.md
+      - DataProcessor: processing/DataProcessor.md
+  - Notifier: notify/Notifier.md
+  - Tools: tools/functions.md
 
 # Ensure images are served correctly
 markdown_extensions:
