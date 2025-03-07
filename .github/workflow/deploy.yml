@@ -1,31 +1,32 @@
-name: Deploy MkDocs to GitHub Pages
+name: Deploy Documentation to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Runs when pushing to the 'main' branch
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Setup Python (matching GitLab CI)
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
 
-      - name: Install MkDocs and Plugins
-        run: pip install mkdocs mkdocs-material
+      # Install dependencies (ensure mkdocs and material theme are installed)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material
 
+      # Prepare documentation structure
       - name: Prepare Documentation Structure
         run: |
           mkdir -p docs
@@ -41,13 +42,22 @@ jobs:
           cp -r documentation/upload/. docs/upload
           cp README.md docs/
 
+      # Build the MkDocs site
       - name: Build MkDocs Site
-        run: |
-          mkdocs build
-          mv site public
+        run: mkdocs build --clean
 
+      # Postprocess documentation structure
+      - name: Postprocess Documentation Structure
+        run: |
+          cp -r documentation/download/. download
+          cp -r documentation/notify/. notify
+          cp -r documentation/processing/. processing
+          cp -r documentation/tools/. tools
+          cp -r documentation/upload/. upload
+
+      # Deploy the site to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: ./site
