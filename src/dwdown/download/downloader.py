@@ -48,7 +48,7 @@ class DWDDownloader:
         Initializes the DWDDownloader with the URL and an optional delay.
 
         :param url: Full URL to fetch data from (following five parameters are
-         NOT needed).
+         NOT needed and will be overwritten).
         :param base_url: Base URL to fetch data from (following four parameters
          are needed to build full URL).
         :param model: The NWP model name, e.g. icon-d2, icon-eu, icon-eu-eps, ...
@@ -57,7 +57,7 @@ class DWDDownloader:
         :param forecast_run: The forecast run in the 3-hourly assimilation
          cycle, e.g. 00, 03, 06, ..., 21.
         :param variable: The single-level model fields that should be
-         donwloaded, e.g. t_2m, tmax_2m, clch, pmsl, ...
+         downloaded, e.g. t_2m, tmax_2m, clch, pmsl, ...
         :param restart_failed_downloads: If True, retry failed downloads
          sequentially.
         :param log_downloads: If True, log download activities.
