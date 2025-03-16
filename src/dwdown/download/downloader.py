@@ -332,6 +332,16 @@ class DWDDownloader:
         """
         Main method to get all the download links after filtering filenames.
 
+        :param name_startswith: String that filenames must start with
+        :param name_endswith: String that filenames must end with
+        :param include_pattern: List of substrings;
+         at least one must be in the filename
+        :param exclude_pattern: List of substrings;
+         filenames with any of these are excluded
+        :param min_timestep: Optional[Union[str, int, None]]. The minimum
+         timestep value (default is 0 if None)
+        :param max_timestep: Optional[Union[str, int, None]]. The maximum
+         timestep value (default is 48 if None)
         :return: List of full download URLs
         """
         filenames = self._get_filenames_from_url()
