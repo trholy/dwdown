@@ -42,8 +42,16 @@ class DWDDownloader:
         """
         Initializes the DWDDownloader with the URL and an optional delay.
 
-        :param url: Base URL to fetch data from
-        :param delay: Optional delay between downloads (in seconds)
+        :param url: Full URL to fetch data from.
+        :param restart_failed_downloads: If True, retry failed downloads
+         sequentially.
+        :param log_downloads: If True, log download activities.
+        :param delay: Optional delay between downloads (in seconds).
+        :param workers: Number of worker threads for parallel downloading.
+        :param download_path: Directory to save downloaded files.
+        :param log_files_path: Directory to save log files.
+        :param xpath_files: XPath expression to extract filenames from the HTML.
+        :param xpath_dates: XPath expression to extract date strings from the HTML.
         """
         self.url = url
         self.delay = delay
