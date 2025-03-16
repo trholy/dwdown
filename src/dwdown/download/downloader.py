@@ -30,6 +30,11 @@ class DWDDownloader:
     def __init__(
             self,
             url: str,
+            url: str | None = None,
+            base_url: str | None = None,
+            model: str | None = None,
+            forecast_run: str | None = None,
+            variable: str | None = None,
             restart_failed_downloads: bool = False,
             log_downloads: bool = True,
             delay: int | float | None = None,
@@ -43,6 +48,15 @@ class DWDDownloader:
         Initializes the DWDDownloader with the URL and an optional delay.
 
         :param url: Full URL to fetch data from.
+        :param url: Full URL to fetch data from (following five parameters are
+         NOT needed).
+        :param base_url: Base URL to fetch data from (following four parameters
+         are needed to build full URL).
+        :param model: The NWP model name, e.g. icon-d2, icon-eu, icon-eu-eps, ...
+        :param forecast_run: The forecast run in the 3-hourly assimilation
+         cycle, e.g. 00, 03, 06, ..., 21.
+        :param variable: The single-level model fields that should be
+         donwloaded, e.g. t_2m, tmax_2m, clch, pmsl, ...
         :param restart_failed_downloads: If True, retry failed downloads
          sequentially.
         :param log_downloads: If True, log download activities.
@@ -54,6 +68,18 @@ class DWDDownloader:
         :param xpath_dates: XPath expression to extract date strings from the HTML.
         """
         self.url = url
+        base_url = base_url or "https://opendata.dwd.de/weather/nwp"
+        if url:
+            self.url = url
+        elif all((base_url, model, forecast_run, variable)):
+            self.url = f"{base_url}/{model}/grib/{forecast_run}/{variable}/"
+        else:
+            raise ValueError(
+                "Either a full URL (:param url) or all components"
+                " (:param base_url, model, forecast_run, variable)"
+                " must be provided."
+            )
+
         self.delay = delay
         self.workers = workers
         self.xpath_files = xpath_files
