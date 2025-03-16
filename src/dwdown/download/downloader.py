@@ -216,7 +216,7 @@ class DWDDownloader:
     @staticmethod
     def _filter_file_names(
             filenames: list[str],
-            name_startswith: str = "icon-d2_germany",
+            name_startswith: str = "icon",
             name_endswith: str = ".bz2",
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None
@@ -302,7 +302,7 @@ class DWDDownloader:
 
     def get_links(
             self,
-            name_startswith: str = "icon-d2_germany",
+            name_startswith: str = "icon",
             name_endswith: str = ".bz2",
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
