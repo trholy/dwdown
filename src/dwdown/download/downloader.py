@@ -267,21 +267,14 @@ class DWDDownloader:
         """
         Generates a list of formatted timestep patterns within a given range.
 
-        Parameters:
-        -----------
-        min_timestep : Union[str, int, None], optional
-            The minimum timestep value (default is 0 if None).
-        max_timestep : Union[str, int, None], optional
-            The maximum timestep value (default is 48 if None).
-        include_pattern : Optional[List[str]], optional
-            A list to which the generated timestep patterns will be added.
-            If None, a new list is created.
-
-        Returns:
-        --------
-        List[str]
-            A list of formatted timestep patterns (e.g., "_000_",
-             "_001_", ..., "_048_").
+        :param min_timestep: Optional[Union[str, int, None]]. The minimum
+         timestep value (default is 0 if None)
+        :param max_timestep: Optional[Union[str, int, None]]. The maximum
+         timestep value (default is 48 if None)
+        :param include_pattern: Optional[List[str]]. List of substrings;
+        at least one must be in the filename
+        :return: List[str]. A list of formatted timestep patterns
+         (e.g., "_000_", "_001_", ..., "_048_")
         """
         # Assign default values using `or`
         min_timestep = int(min_timestep) if min_timestep is not None else 0
@@ -525,8 +518,8 @@ class DWDDownloader:
             data: list
     ) -> None:
         """
-        Writes a list of file links to a log file,
-         ensuring each entry is on a new line.
+        Writes a list of file links to a log file, ensuring each entry is
+         on a new line.
         """
         try:
             with open(filename, "w", encoding="utf-8") as file:
@@ -575,7 +568,9 @@ class MinioDownloader:
     def _ensure_directory_exists(
             path: str
     ) -> None:
-        """Helper function to ensure a directory exists, creates if not."""
+        """
+        Helper function to ensure a directory exists, creates if not.
+        """
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
 
@@ -583,7 +578,9 @@ class MinioDownloader:
             self,
             bucket_name
     ) -> None:
-        """Ensure the bucket exists."""
+        """
+        Ensure the bucket exists.
+        """
         if self.client.bucket_exists(bucket_name):
             self.logger.info(f"Bucket {bucket_name} exists")
         else:
@@ -620,7 +617,9 @@ class MinioDownloader:
             bucket_name: str,
             folder_prefix: str,
     ) -> list:
-        """Retrieve a list of remote files from MinIO."""
+        """
+        Retrieve a list of remote files from MinIO.
+        """
         remote_files = list(self.client.list_objects(
             bucket_name,
             prefix=folder_prefix,
@@ -639,7 +638,9 @@ class MinioDownloader:
             bucket_name: str,
             folder_prefix: str | None = None
     ) -> None:
-        """Recursively downloads a bucket or folder from MinIO."""
+        """
+        Recursively downloads a bucket or folder from MinIO.
+        """
         self._ensure_bucket(bucket_name)
         remote_files = self._get_remote_files(bucket_name, folder_prefix)
 
@@ -744,9 +745,15 @@ class MinioDownloader:
 
         return False
 
-    def _verify_file_integrity(self, bucket_name: str, local_file_path: str,
-                               remote_path: str) -> bool:
-        """Verifies if the local file matches the remote file's checksum."""
+    def _verify_file_integrity(
+            self,
+            bucket_name: str,
+            local_file_path: str,
+            remote_path: str
+    ) -> bool:
+        """
+        Verifies if the local file matches the remote file's checksum.
+        """
         try:
             local_md5 = self.calculate_md5(local_file_path)
             obj_stat = self.client.stat_object(bucket_name, remote_path)
@@ -763,8 +770,8 @@ class MinioDownloader:
             data: list
     ) -> None:
         """
-        Writes a list of file links to a log file,
-         ensuring each entry is on a new line.
+        Writes a list of file links to a log file, ensuring each entry
+         is on a new line.
         """
         try:
             with open(filename, "w", encoding="utf-8") as file:

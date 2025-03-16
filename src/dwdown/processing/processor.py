@@ -250,7 +250,9 @@ class DataProcessor:
             self,
             nested_list: list | str
     ) -> list[str]:
-        """Recursively flattens a nested list of filenames."""
+        """
+        Recursively flattens a nested list of filenames.
+        """
         if isinstance(nested_list, str):
             return [nested_list]
         elif isinstance(nested_list, list):
@@ -270,7 +272,9 @@ class DataProcessor:
             name_startswith: str,
             name_endswith: str,
     ) -> list[str]:
-        """Recursively search for matching files in the given directory."""
+        """
+        Recursively search for matching files in the given directory.
+        """
         filenames = []
         for entry in os.scandir(directory):
             if entry.is_file():

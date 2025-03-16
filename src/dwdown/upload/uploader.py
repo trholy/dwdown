@@ -55,14 +55,18 @@ class MinioUploader:
     def _ensure_directory_exists(
             path: str
     ) -> None:
-        """Helper function to ensure a directory exists, creates if not."""
+        """
+        Helper function to ensure a directory exists, creates if not.
+        """
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
 
     def _ensure_bucket(
             self
     ) -> None:
-        """Ensure the bucket exists, or create it if necessary."""
+        """
+        Ensure the bucket exists, or create it if necessary.
+        """
         if not self.client.bucket_exists(self.bucket_name):
             self.client.make_bucket(self.bucket_name)
             self.logger.info(f"Created bucket {self.bucket_name}")
@@ -73,7 +77,9 @@ class MinioUploader:
     def calculate_md5(
             file_path: str
     ) -> str:
-        """Computes the MD5 hash of a file."""
+        """
+        Computes the MD5 hash of a file.
+        """
         hash_md5 = hashlib.md5()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -100,7 +106,9 @@ class MinioUploader:
             remote_prefix: str = "",
             check_for_existence: bool = False
     ) -> None:
-        """Recursively uploads a directory to MinIO with real-time logging."""
+        """
+        Recursively uploads a directory to MinIO with real-time logging.
+        """
 
         self._ensure_bucket()
 
@@ -204,7 +212,9 @@ class MinioUploader:
             check_for_existence: bool,
             existing_files: dict
     ) -> bool:
-        """Uploads a single file with immediate logging."""
+        """
+        Uploads a single file with immediate logging.
+        """
         try:
             local_md5 = self.calculate_md5(local_file_path)
 
@@ -236,7 +246,9 @@ class MinioUploader:
     def delete_local_files(
             self
     ) -> None:
-        """Deletes local files after successful upload verification."""
+        """
+        Deletes local files after successful upload verification.
+        """
         for file_path in self.uploaded_files:
             os.remove(file_path)
             self.logger.info(f"Deleted {file_path}")
