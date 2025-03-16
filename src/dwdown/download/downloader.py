@@ -29,10 +29,10 @@ class DWDDownloader:
 
     def __init__(
             self,
-            url: str,
             url: str | None = None,
             base_url: str | None = None,
             model: str | None = None,
+            grid: str | None = None,
             forecast_run: str | None = None,
             variable: str | None = None,
             restart_failed_downloads: bool = False,
@@ -47,12 +47,13 @@ class DWDDownloader:
         """
         Initializes the DWDDownloader with the URL and an optional delay.
 
-        :param url: Full URL to fetch data from.
         :param url: Full URL to fetch data from (following five parameters are
          NOT needed).
         :param base_url: Base URL to fetch data from (following four parameters
          are needed to build full URL).
         :param model: The NWP model name, e.g. icon-d2, icon-eu, icon-eu-eps, ...
+        :param grid: The model grid [regular-lat-lon | rotated-lat-lon
+         | icosahedral].
         :param forecast_run: The forecast run in the 3-hourly assimilation
          cycle, e.g. 00, 03, 06, ..., 21.
         :param variable: The single-level model fields that should be
@@ -67,7 +68,6 @@ class DWDDownloader:
         :param xpath_files: XPath expression to extract filenames from the HTML.
         :param xpath_dates: XPath expression to extract date strings from the HTML.
         """
-        self.url = url
         base_url = base_url or "https://opendata.dwd.de/weather/nwp"
         if url:
             self.url = url
@@ -80,6 +80,7 @@ class DWDDownloader:
                 " must be provided."
             )
 
+        self.grid = grid
         self.delay = delay
         self.workers = workers
         self.xpath_files = xpath_files
@@ -342,6 +343,24 @@ class DWDDownloader:
             max_timestep=max_timestep,
             include_pattern=include_pattern
         )
+
+        # Ensure include_pattern is a list
+        if include_pattern is None:
+            include_pattern = []
+
+        # Add grid to include_pattern if it is a string
+        if isinstance(self.grid, str):
+            include_pattern.append(self.grid)
+
+        # Check for overlapping patterns
+        if exclude_pattern:
+            overlapp = list(set(include_pattern) & set(exclude_pattern))
+            if overlapp:
+                self.logger.warning(
+                    f"Include pattern and exclude pattern overlap: {overlapp}."
+                    f" This might prevent any files from being downloaded."
+                )
+                return []
 
         filtered_filenames = self._filter_file_names(
             filenames=filenames,
