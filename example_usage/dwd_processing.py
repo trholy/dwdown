@@ -1,17 +1,17 @@
 from dwdown.processing import DataEditor, DataProcessor
 
 # Initialize the DataProcessor
-editor = DataProcessor(
+processor = DataProcessor(
     search_path="download_files",  # Path for files to process
     extraction_path="extracted_files",  # Path for extracted files
     converted_files_path="csv_files",  # Path for CSV files
 )
 
 # Retrieve the filenames that have been downloaded
-file_names = editor.get_filenames()
+file_names = processor.get_filenames()
 
 # Convert downloaded files into CSV format
-editor.get_csv(
+processor.get_csv(
     file_names=file_names,
     apply_geo_filtering=True,
     start_lat=50.840,

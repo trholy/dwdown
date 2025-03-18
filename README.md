@@ -269,12 +269,12 @@ dwdown/
 │   │   ├── tools/
 │   │   │   ├── tools.py
 │   │   │   ├── __init__.py
-├── tests/
-│   ├── dwd_download_test.py
-│   ├── dwd_merging_test.py
-│   ├── dwd_scraper_test.py
-│   ├── minio_downloader_test.py
-│   ├── notifier_test.py
+├── example_usage/
+│   ├── dwd_processing.py
+│   ├── dwd_scraper.py
+│   ├── minio_downloader.py
+│   ├── minio_uploader.py
+│   ├── notifier.py
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
