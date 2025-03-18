@@ -24,6 +24,10 @@ git clone https://github.com/trholy/dwdown.git
 pip install .
 ```
 
+## Documentation
+
+Read the documentation on [GitLab Pages](https://to82lod.gitpages.uni-jena.de/dwdown/).
+
 ## Usage
 
 ### DWDDownloader: Download Data from DWD
