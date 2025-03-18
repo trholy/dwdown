@@ -18,6 +18,10 @@ from lxml import html
 from minio import Minio
 from minio.error import S3Error
 
+import zipfile
+import pandas as pd
+
+
 # Configure logging to remove the default prefix
 logging.basicConfig(
     level=logging.INFO,
@@ -834,3 +838,209 @@ class MinioDownloader:
             self.logger.info(f"Saved log: {filename} ({len(data)} entries)")
         except Exception as e:
             self.logger.error(f"Error writing log file {filename}: {e}")
+
+
+class HistDataDownloader:
+    def __init__(
+            self,
+            base_url: str | None = None,
+            download_path: str = "downloads",
+            extract_path: str = "extract",
+            encoding: str = "windows-1252",
+            station_description_file_name: str | None = None,
+    ):
+        """
+        Initializes the HistDataDownloader.
+
+        :param download_path: Directory where files will be downloaded
+        :param extract_path: Directory where files will be extracted
+        """
+        self.base_url = base_url or "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/kl/historical/"
+        self.station_description_file_name = (
+                station_description_file_name
+                or "KL_Tageswerte_Beschreibung_Stationen"
+        )
+        self.download_path = download_path
+        self.extract_path = extract_path
+        self.encoding = encoding
+
+        # Ensure necessary directories exist
+        self._ensure_directory_exists(self.download_path)
+        self._ensure_directory_exists(self.extract_path)
+
+        self.logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def _ensure_directory_exists(
+            path: str
+    ) -> None:
+        """
+        Helper function to ensure a directory exists, creates if not.
+
+        :param path: Directory path to check and create
+        """
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+
+    def download_station_description(
+            self
+    ) -> None:
+        """
+        Download the station description file.
+        """
+        url = f"{self.base_url}{self.station_description_file_name}.txt"
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+
+            with open(os.path.join(
+                    self.download_path,
+                    f"{self.station_description_file_name}.txt"), 'wb'
+            ) as file:
+                file.write(response.content)
+            self.logger.info(
+                "Station description file downloaded successfully."
+            )
+        except requests.exceptions.RequestException as e:
+            self.logger.error(
+                f"Error downloading station description file: {e}"
+            )
+            raise
+
+    def read_station_description(
+            self
+    ) -> pd.DataFrame:
+        """
+        Read the station description file into a pandas DataFrame.
+
+        :return: DataFrame containing station descriptions
+        """
+        try:
+            station_description = pd.read_fwf(
+                filepath_or_buffer=os.path.join(
+                    self.download_path,
+                    f"{self.station_description_file_name}.txt"
+                ),
+                skiprows=2,  # Skip header lines
+                colspecs=[
+                    (0, 5), (6, 14), (15, 23), (24, 39), (40, 49),
+                    (50, 59), (60, 104), (105, 124), (125, 132)
+                ],
+                names=[
+                    "Stations_id", "von_datum", "bis_datum",
+                    "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname",
+                    "Bundesland", "Abgabe"
+                ],
+                index_col="Stations_id",
+                encoding=self.encoding
+            )
+            return station_description
+        except Exception as e:
+            self.logger.error(f"Error reading station description file: {e}")
+            raise
+
+    def download_zip_files(
+            self,
+            station_id: str
+    ) -> None:
+        """
+        Download zip files for a given station ID.
+        """
+        try:
+            response = requests.get(self.base_url)
+            response.raise_for_status()
+
+            zip_files = re.findall(
+                f'tageswerte_KL_{station_id}_.*?\\.zip', response.text
+            )
+
+            for zip_file in zip_files:
+                zip_url = self.base_url + zip_file
+                self.logger.info(f"Downloading {zip_url}...")
+                zip_response = requests.get(zip_url)
+                zip_response.raise_for_status()
+
+                with open(os.path.join(
+                        self.download_path, zip_file), 'wb'
+                ) as file:
+                    file.write(zip_response.content)
+                self.logger.info(f"{zip_file} downloaded.")
+        except requests.exceptions.RequestException as e:
+            self.logger.error(
+                f"Error downloading zip files for station {station_id}: {e}"
+            )
+            raise
+
+    def unpack_zip(
+            self,
+            zip_file: str,
+            station_id: str,
+            unpack_hist_data_only: bool = False
+    ) -> None:
+        """
+        Unpack a zip file using xarray. Only unpack the file if it matches
+         the given pattern.
+
+        :param zip_file: The name of the zip file to unpack.
+        :param station_id: The station ID used to filter files inside the zip.
+        :param unpack_hist_data_only: If True, only unpack files matching the
+         specific pattern.
+        """
+        try:
+            folder_name = zip_file.replace('.zip', '')
+            zip_file_path = os.path.join(self.download_path, zip_file)
+
+            with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+                # Get list of all files in the zip
+                zip_files = zip_ref.namelist()
+
+                if unpack_hist_data_only:
+                    # Filter files that match the pattern
+                    pattern = f"^produkt_klima_tag_.*_{station_id}\\.txt$"
+                    files_to_unpack = [f for f in zip_files if
+                                       re.match(pattern, f)]
+                else:
+                    # If not filtering, unpack all files
+                    files_to_unpack = zip_files
+
+                # Unpack matching files
+                for file in files_to_unpack:
+                    zip_ref.extract(file, os.path.join(self.extract_path,
+                                                       folder_name))
+                    self.logger.info(f"{file} unpacked to {folder_name}")
+
+            self.logger.info(f"{zip_file} unpacked to {folder_name}")
+        except Exception as e:
+            self.logger.error(f"Error unpacking zip file {zip_file}: {e}")
+            raise
+
+    def read_station_data(
+            self,
+            station_id: str
+    ) -> pd.DataFrame | None:
+        """
+        Read station data into a DataFrame.
+
+        :param station_id: The station ID for which to load data
+        :return: DataFrame containing station data or None if not found
+        """
+        try:
+            file_pattern = f"^produkt_klima_tag_.*_{station_id}\\.txt$"
+
+            for root, dirs, files in os.walk(self.extract_path):
+                for file in files:
+                    if re.match(file_pattern, file):
+                        full_path = os.path.join(root, file)
+                        self.logger.info(f"Reading file: {full_path}")
+                        df = pd.read_csv(
+                            filepath_or_buffer=full_path,
+                            delimiter=";",
+                            na_values=-999,
+                        )
+                        return df
+            return None
+        except Exception as e:
+            self.logger.error(
+                f"Error reading station data for station {station_id}: {e}"
+            )
+            raise

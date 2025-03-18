@@ -1,6 +1,7 @@
-from .downloader import DWDDownloader, MinioDownloader
+from .downloader import DWDDownloader, MinioDownloader, HistDataDownloader
 
 __all__ = [
     "DWDDownloader",
-    "MinioDownloader"
+    "MinioDownloader",
+    "HistDataDownloader"
 ]
