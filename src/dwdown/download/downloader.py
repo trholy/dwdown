@@ -148,17 +148,20 @@ class DWDDownloader:
 
     @staticmethod
     def _parse_dates(
-            date_strings: list[str]
+            date_strings: list[str],
+            date_pattern: str | None = None
     ) -> list[datetime]:
         """
         Converts a list of date strings into datetime objects.
-        Expected format: '21-Jan-2025-10:20' → datetime(2025, 1, 21, 10, 20).
+        Expected format: '21-Jan-2025-10:20:34' → datetime(2025, 1, 21, 10, 20, 34).
         """
+        date_pattern = date_pattern or "%d-%b-%Y-%H:%M:%S"
+
         parsed_dates = []
 
         for date in date_strings:
             try:
-                parsed_dates.append(datetime.strptime(date, "%d-%b-%Y-%H:%M"))
+                parsed_dates.append(datetime.strptime(date, date_pattern))
             except ValueError as e:
                 logging.info(
                     f"Skipping invalid date format: {date} ({e})"
@@ -168,7 +171,8 @@ class DWDDownloader:
 
     def get_data_dates(
             self,
-            url: str | None = None
+            url: str | None = None,
+            date_pattern: str | None = None,
     ) -> tuple[datetime, datetime]:
         """
         Fetches and processes date strings from a given URL.
@@ -189,8 +193,8 @@ class DWDDownloader:
             for date in fixed_dates
         ]
 
-        return (min(self._parse_dates(cleaned_dates)),
-                max(self._parse_dates(cleaned_dates)))
+        return (min(self._parse_dates(cleaned_dates, date_pattern)),
+                max(self._parse_dates(cleaned_dates, date_pattern)))
 
     @staticmethod
     def get_current_date(
