@@ -32,7 +32,7 @@ Read the documentation on [GitLab Pages](https://to82lod.gitpages.uni-jena.de/dw
 
 ### Example Workflow
 
-![](documentation/img/example_workflow.png)
+![](./img/example_workflow.png)
 
 ### DWDDownloader: Download Data from DWD
 
