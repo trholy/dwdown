@@ -10,12 +10,14 @@ pages:
     # Ensure the docs directory exists
     - mkdir -p docs
     - mkdir -p docs/download
+    - mkdir -p docs/img
     - mkdir -p docs/notify
     - mkdir -p docs/processing
     - mkdir -p docs/tools
     - mkdir -p docs/upload
     # Copy all Markdown files and images into the docs directory
     - cp -r documentation/download/. docs/download
+    - cp -r documentation/img/. docs/img
     - cp -r documentation/notify/. docs/notify
     - cp -r documentation/processing/. docs/processing
     - cp -r documentation/tools/. docs/tools
