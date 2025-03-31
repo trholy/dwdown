@@ -30,6 +30,10 @@ Read the documentation on [GitLab Pages](https://to82lod.gitpages.uni-jena.de/dw
 
 ## Usage
 
+### Example Workflow
+
+![](documentation/img/example_workflow.png)
+
 ### DWDDownloader: Download Data from DWD
 
 The `DWDDownloader` class allows you to download weather forecast files from the DWD open data server.
