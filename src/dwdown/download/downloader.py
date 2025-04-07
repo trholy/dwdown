@@ -13,14 +13,13 @@ else:
     from datetime import timezone
     UTC = timezone.utc
 
+import zipfile
+
+import pandas as pd
 import requests
 from lxml import html
 from minio import Minio
 from minio.error import S3Error
-
-import zipfile
-import pandas as pd
-
 
 # Configure logging to remove the default prefix
 logging.basicConfig(
@@ -1031,7 +1030,7 @@ class HistDataDownloader:
         try:
             file_pattern = f"^produkt_klima_tag_.*_{station_id}\\.txt$"
 
-            for root, dirs, files in os.walk(self.extract_path):
+            for root, _, files in os.walk(self.extract_path):
                 for file in files:
                     if re.match(file_pattern, file):
                         full_path = os.path.join(root, file)
