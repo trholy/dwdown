@@ -59,15 +59,15 @@ Cleans and formats date strings by:
 
 ```python
 @staticmethod
-_parse_dates(date_strings: list[str]) -> list[datetime]
+_parse_dates(date_strings: list[str], date_pattern: str | None = None) -> list[datetime]
 ```
 
-Converts a list of date strings into datetime objects. Expected format: '21-Jan-2025-10:20' → datetime(2025, 1, 21, 10, 20).
+Converts a list of date strings into datetime objects. Expected format: '21-Jan-2025-10:20:34' → datetime(2025, 1, 21, 10, 20, 34).
 
 #### `get_data_dates`
 
 ```python
-get_data_dates(url: str | None = None) -> tuple[datetime, datetime]
+get_data_dates(url: str | None = None, date_pattern: str | None = None) -> tuple[datetime, datetime]
 ```
 
 Fetches and processes date strings from a given URL.
@@ -76,6 +76,8 @@ Fetches and processes date strings from a given URL.
 
 - `url` : `str | None`, default=`None`
   - URL to fetch date strings from. If `None`, uses the URL provided during initialization.
+- `date_pattern` : `str | None`, default=`None`
+  - Pattern to match upload dates. If `None`, uses the default pattern `%d-%b-%Y-%H:%M:%S`
 
 #### Returns
 
