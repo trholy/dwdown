@@ -1,6 +1,9 @@
-from .downloader import DWDDownloader, MinioDownloader
+from .forecast_download import ForecastDownloader
+from .os_download import OSDownloader
+from .historical_download import HistDownloader
 
 __all__ = [
-    "DWDDownloader",
-    "MinioDownloader"
+    "ForecastDownloader",
+    "OSDownloader",
+    "HistDownloader"
 ]

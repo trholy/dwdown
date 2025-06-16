@@ -1,6 +1,7 @@
-from .processor import DataEditor, DataProcessor
+from .data_merging import DataMerger
+from .grib_data_handling import GribFileManager
 
 __all__ = [
-    "DataEditor",
-    "DataProcessor"
+    "DataMerger",
+    "GribFileManager"
 ]

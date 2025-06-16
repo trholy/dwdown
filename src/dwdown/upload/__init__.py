@@ -1,5 +1,5 @@
-from .uploader import MinioUploader
+from .os_upload import OSUploader
 
 __all__ = [
-    "MinioUploader"
+    "OSUploader"
 ]

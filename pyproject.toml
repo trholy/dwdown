@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dwdown"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     { name = "Thomas R. Holy", email = "thomas.robert.holy@gmail.com" }
 ]
 maintainers = [
     { name = "Thomas R. Holy", email = "thomas.robert.holy@gmail.com" }
 ]
-description = "A package for downloading weather forecasts from Deutscher Wetterdienst (DWD)"
+description = "Download weather forecasts and historical data from DWD"
 readme = "README.md"
 keywords = [
     "DWD",
@@ -23,7 +23,7 @@ keywords = [
     "data mining",
     "data science",
 ]
-license = { text = "CC BY 4.0" }
+license = { text = "MIT" }
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -32,7 +32,6 @@ classifiers = [
     "Operating System :: MacOS",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -40,13 +39,14 @@ classifiers = [
     "Topic :: Software Development",
 ]
 
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "lxml>=5.3.0",
     "minio>=7.2.15",
     "pandas>=2.2.3",
     "requests>=2.32.3",
     "xarray>=2024.7.0",
+    "urllib3>=2.3.0",
 ]
 
 [project.optional-dependencies]
