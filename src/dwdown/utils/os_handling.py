@@ -52,6 +52,7 @@ class OSHandler:
 
         :param bucket_name: The name of the bucket.
         :param remote_prefix: The prefix to filter objects by.
+        :param return_basename: Whether to return only the basename of the file.
         :return: A dictionary of object names and their ETags.
         :raises S3Error: If there is an error fetching the files.
         """
@@ -86,10 +87,11 @@ class OSHandler:
         """
         Verifies the integrity of a local file against a remote file using MD5 hash.
 
-        :param bucket_name: The name of the bucket.
         :param local_file_path: The path to the local file.
         :param remote_path: The path to the remote file.
+        :param bucket_name: The name of the bucket.
         :param remote_hash: The ETag of the remote file.
+        :param local_md5: The MD5 hash of the local file.
         :return: True if the files match, False otherwise.
         """
         try:
