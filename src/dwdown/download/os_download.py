@@ -175,7 +175,7 @@ class OSDownloader(
             additional_patterns: dict | None = None,
             skip_time_step_filtering_variables: list[str] | None = None,
             variables: list[str] | None = None,
-            folder_prefix: str = ""
+            remote_prefix: str | None = None,
     ) -> None:
         """
         Downloads files from a specified bucket based on given criteria.
@@ -190,11 +190,11 @@ class OSDownloader(
         :param additional_patterns: Additional patterns for filtering.
         :param skip_time_step_filtering_variables: Variables to skip timestep filtering.
         :param variables: List of variables to filter by.
-        :param folder_prefix: Prefix for the folder in the bucket.
+        :param remote_prefix: Prefix for the folder in the bucket.
         """
         self._ensure_bucket(self.bucket_name)
         remote_files_with_hashes = self._fetch_existing_files(
-            self.bucket_name, folder_prefix)
+            self.bucket_name, remote_prefix)
 
         include_pattern = self._string_to_list(include_pattern)
         exclude_pattern = self._string_to_list(exclude_pattern)
@@ -206,7 +206,7 @@ class OSDownloader(
 
         filtered_files = self._simple_filename_filter(
             filenames=list(remote_files_with_hashes.keys()),
-            prefix=folder_prefix,
+            prefix=remote_prefix,
             suffix=suffix,
             include_pattern=include_pattern_with_timesteps,
             exclude_pattern=exclude_pattern,
@@ -225,7 +225,7 @@ class OSDownloader(
         if not filtered_remote_files_with_hashes:
             self._logger.info(
                 f"No files to download from bucket '{self.bucket_name}'"
-                f" with prefix '{folder_prefix}'.")
+                f" with prefix '{remote_prefix}'.")
             return  # Exit early if no files
 
         files_to_download = self._build_download_list(

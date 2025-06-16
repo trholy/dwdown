@@ -56,6 +56,8 @@ class OSHandler:
         :return: A dictionary of object names and their ETags.
         :raises S3Error: If there is an error fetching the files.
         """
+        remote_prefix = remote_prefix or ""
+
         existing_files = {}
 
         try:
