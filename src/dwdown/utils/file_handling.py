@@ -91,6 +91,8 @@ class FileHandler:
 
         #include_pattern = include_pattern or [""]
         #exclude_pattern = exclude_pattern or []
+        prefix = prefix or ""
+        suffix = suffix or ""
 
         filenames = [os.path.normpath(filename) for filename in filenames]
         filtered_filenames = [

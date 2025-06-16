@@ -69,8 +69,8 @@ class DataMerger(
             self,
             time_step: str | int,
             variables: list[str],
-            prefix: str = "",
-            suffix: str = "",
+            prefix: str | None = None,
+            suffix: str | None = None,
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
             skip_time_step_filtering_variables: list[str] | None = None

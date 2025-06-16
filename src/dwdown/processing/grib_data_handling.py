@@ -169,8 +169,8 @@ class GribFileManager(
 
     def get_filenames(
             self,
-            prefix: str = "",
-            suffix: str = "",
+            prefix: str | None = None,
+            suffix: str | None = None,
             min_timestep: str | int | None = None,
             max_timestep: str | int | None = None,
             include_pattern: list[str] | None = None,

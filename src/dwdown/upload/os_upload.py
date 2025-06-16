@@ -204,9 +204,6 @@ class OSUploader(
         else:
             existing_remote_files_with_hashes = {}
 
-        prefix = prefix or ""
-        suffix = suffix or ""
-
         filenames = self._search_directory(self.files_path)
         filenames = self._flatten_list(filenames)
 

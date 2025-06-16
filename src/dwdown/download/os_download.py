@@ -167,7 +167,7 @@ class OSDownloader(
     def download(
             self,
             check_for_existence: bool = False,
-            suffix: str = "",
+            suffix: str | None = None,
             min_timestep: str | int | None = None,
             max_timestep: str | int | None = None,
             include_pattern: list[str] | None = None,
