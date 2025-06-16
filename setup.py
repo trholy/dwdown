@@ -34,6 +34,8 @@ setup(
         "dev": [
             "pytest>=7.2",
             "ruff>= 0.9.6",
+            "chardet>=5.2.0",
+            "responses>=0.25.0",
         ]
     },
     test_suite='pytest',
