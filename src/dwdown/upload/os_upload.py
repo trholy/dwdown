@@ -179,6 +179,7 @@ class OSUploader(
 
     def upload(
             self,
+            check_for_existence: bool = False,
             prefix: str | None = None,
             suffix: str | None = None,
             include_pattern: list[str] | None = None,
@@ -188,14 +189,23 @@ class OSUploader(
             variables: list[str] | None = None,
             min_timestep: str | int | None = None,
             max_timestep: str | int | None = None,
-            remote_prefix: str = "",
-            check_for_existence: bool = False
+            remote_prefix: str = ""
     ) -> None:
         """
         Uploads files from the local path to the specified bucket.
 
-        :param remote_prefix: The prefix to use for remote paths.
-        :param check_for_existence: Whether to check for existing files.
+        :param check_for_existence: If True, checks if the file already exists
+         in the download directory and skips the download if it does.
+        :param prefix: Prefix for the folder in the bucket.
+        :param suffix: The file extension to filter by.
+        :param min_timestep: Minimum timestep to include.
+        :param max_timestep: Maximum timestep to include.
+        :param include_pattern: List of patterns to include.
+        :param exclude_pattern: List of patterns to exclude.
+        :param additional_patterns: Additional patterns for filtering.
+        :param skip_time_step_filtering_variables: Variables to skip timestep filtering.
+        :param variables: List of variables to filter by.
+        :param remote_prefix: Prefix for the folder in the bucket.
         """
         self._ensure_bucket(self.bucket_name, True)
         if check_for_existence:
