@@ -204,7 +204,7 @@ class ForecastDownloader(
         :return: A list of download links that match the specified filters.
         """
         prefix = prefix or self.model
-        suffix = suffix or ".bz2"
+        suffix = suffix or ".grib2.bz2"
 
         include_pattern = self._string_to_list(include_pattern)
         exclude_pattern = self._string_to_list(exclude_pattern)
