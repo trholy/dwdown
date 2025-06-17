@@ -275,7 +275,13 @@ class ForecastDownloader(
         """
         try:
             filename = os.path.basename(link)
-            downloaded_file_path = os.path.join(self.files_path, filename)
+
+            if all((self.forecast_run, self.variable)):
+                files_path = os.path.join(self.files_path, self.forecast_run, self.variable)
+                downloaded_file_path = os.path.join(files_path, filename)
+                self._ensure_directory_exists(files_path)
+            else:
+                downloaded_file_path = os.path.join(self.files_path, filename)
             downloaded_file_path = os.path.normpath(downloaded_file_path)
             self._downloaded_files_paths.append(downloaded_file_path)
 
