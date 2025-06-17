@@ -104,7 +104,7 @@ class GribFileManager(
                 self._logger.info(
                     f"Decompressed file: {os.path.basename(decompressed_file_path)}")
             else:
-                self._logger.warning(
+                self._logger.info(
                     f"File already exists: {decompressed_file_path},"
                     f" skipping decompression.")
             return decompressed_file_path
@@ -161,7 +161,7 @@ class GribFileManager(
 
                 self.converted_files.append(csv_file_path)
             else:
-                self._logger.warning(
+                self._logger.info(
                     f"File already exists: {file_path}, skipping converting.")
         except Exception as e:
             self._logger.error(
