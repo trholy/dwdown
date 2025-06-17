@@ -72,22 +72,6 @@ class OSUploader(
         self.uploaded_files = []
         self.corrupted_files = []
 
-    """
-    def _build_upload_list(
-            self,
-            remote_prefix: str
-    ) -> list[tuple[str, str]]:
-
-        files_to_upload = []
-        for root, _, files in os.walk(self.files_path):
-            for file in files:
-                local_file_path = os.path.join(root, file)
-                local_file_path = os.path.normpath(local_file_path)
-                relative_path = os.path.relpath(local_file_path, self.files_path)
-                remote_path = urljoin(remote_prefix, relative_path)
-                files_to_upload.append((local_file_path, remote_path))
-        return files_to_upload
-    """
     def _build_upload_list(
             self,
             filtered_filenames,
@@ -132,19 +116,7 @@ class OSUploader(
         :return: True if the file was uploaded successfully, False otherwise.
         """
         try:
-            """
-            local_md5 = self._calculate_md5(local_file_path)
-
-            if check_for_existence:
-                existing_files = self._fetch_existing_files(
-                    self.bucket_name, remote_prefix)
-                if (remote_path in existing_files
-                        and existing_files[remote_path] == local_md5):
-                    self._logger.info(
-                        f"Skipping already uploaded file: {remote_path}")
-                    return True
-            """
-            # Respect the delay between downloads
+            # Respect the delay between uploads
             if self._delay > 0:
                 time.sleep(self._delay)
 
@@ -162,7 +134,7 @@ class OSUploader(
                 return False
 
         except Exception as e:
-            self._logger.error(f"Failed to download {local_file_path}: {e}")
+            self._logger.error(f"Failed to upload {local_file_path}: {e}")
             self.corrupted_files.append(local_file_path)
             return False
 
@@ -260,7 +232,7 @@ class OSUploader(
                         self.corrupted_files.append(local_file_path)
                 except Exception as e:
                     self._logger.error(
-                        f"Error downloading {local_file_path}: {e}")
+                        f"Error uploading {local_file_path}: {e}")
 
         self._log_summary()
 
