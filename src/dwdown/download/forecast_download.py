@@ -30,6 +30,7 @@ class ForecastDownloader(
             delay: int | float = 1,
             n_jobs: int = 1,
             retry: int = 0,
+            timeout: int = 30,
             url: str | None = None,
             base_url: str | None = None,
             xpath_files: str | None = None,
@@ -50,6 +51,7 @@ class ForecastDownloader(
         :param variable: The single-level model fields that should be
          downloaded, e.g. t_2m, tmax_2m, clch, pmsl, ...
         :param retry: If True, retry failed downloads sequentially.
+        :param timeout: Timeout for both the connect and the read timeouts.
         :param delay: Optional delay between downloads (in seconds).
         :param n_jobs: Number of worker threads for parallel downloading.
         :param files_path: Directory to save downloaded files.
@@ -69,6 +71,7 @@ class ForecastDownloader(
         self._delay = delay
         self._n_jobs = n_jobs
         self._retry = retry
+        self._timeout = timeout
 
         self._xpath_files = xpath_files or "/html/body/pre//a/@href"
         self._xpath_meta_data = xpath_meta_data or "//pre/text()"
@@ -116,7 +119,7 @@ class ForecastDownloader(
          Returns an empty list if the request fails or no filenames are found.
         """
         try:
-            response = self._session.get(self.url, timeout=30)
+            response = self._session.get(self.url, timeout=self._timeout)
             response.raise_for_status()
             tree = html.fromstring(response.content)
             filenames = tree.xpath(self._xpath_files)
@@ -154,7 +157,7 @@ class ForecastDownloader(
         :return: A tuple containing the minimum and maximum dates parsed
          from the URL.
         """
-        response = self._session.get(url or self.url, timeout=30)
+        response = self._session.get(url or self.url, timeout=self._timeout)
         response.raise_for_status()
 
         tree = html.fromstring(response.content)
@@ -267,7 +270,7 @@ class ForecastDownloader(
             if self._delay > 0:
                 time.sleep(self._delay)
 
-            response = self._session.get(link, stream=True, timeout=30)
+            response = self._session.get(link, stream=True, timeout=self._timeout)
             response.raise_for_status()  # Raise an error for bad responses
 
             # Download the file in chunks
