@@ -90,8 +90,6 @@ class FileHandler:
         skip_time_step_filtering_variables = self._string_to_list(
             skip_time_step_filtering_variables)
 
-        #include_pattern = include_pattern or [""]
-        #exclude_pattern = exclude_pattern or []
         prefix = prefix or ""
         suffix = suffix or ""
 
