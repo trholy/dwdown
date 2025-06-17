@@ -167,6 +167,7 @@ class OSDownloader(
     def download(
             self,
             check_for_existence: bool = False,
+            remote_prefix: str | None = None,
             suffix: str | None = None,
             min_timestep: str | int | None = None,
             max_timestep: str | int | None = None,
@@ -174,14 +175,14 @@ class OSDownloader(
             exclude_pattern: list[str] | None = None,
             additional_patterns: dict | None = None,
             skip_time_step_filtering_variables: list[str] | None = None,
-            variables: list[str] | None = None,
-            remote_prefix: str | None = None,
+            variables: list[str] | None = None
     ) -> None:
         """
         Downloads files from a specified bucket based on given criteria.
 
         :param check_for_existence: If True, checks if the file already exists
          in the download directory and skips the download if it does.
+        :param remote_prefix: Prefix for the folder in the bucket.
         :param suffix: The file extension to filter by.
         :param min_timestep: Minimum timestep to include.
         :param max_timestep: Maximum timestep to include.
@@ -190,7 +191,6 @@ class OSDownloader(
         :param additional_patterns: Additional patterns for filtering.
         :param skip_time_step_filtering_variables: Variables to skip timestep filtering.
         :param variables: List of variables to filter by.
-        :param remote_prefix: Prefix for the folder in the bucket.
         """
         self._ensure_bucket(self.bucket_name)
         remote_files_with_hashes = self._fetch_existing_files(
