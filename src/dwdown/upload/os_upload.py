@@ -74,45 +74,49 @@ class OSUploader(
 
     def _build_upload_list(
             self,
-            filtered_filenames,
+            local_files_with_hashes: dict[str, str],
             remote_prefix: str,
-            filtered_remote_files: dict[str, str] | None = None
+            existing_remote_files_with_hashes: dict[str, str] | None = None
     ):
         """
+        Builds a list of files to upload.
 
+        :param local_files_with_hashes: Dictionary of local filenames and their hashes.
+        :param remote_prefix: Prefix for the remote path.
+        :param existing_remote_files_with_hashes: Dictionary of remote filenames and their hashes.
+        :return: List of tuples containing local and remote file paths.
         """
         files_to_upload = []
-        for local_path, local_hash in filtered_filenames.items():
+        for local_path, local_hash in local_files_with_hashes.items():
             local_file_path = os.path.normpath(local_path)
 
             # Skip if the file already exists and matches hash
-            if (os.path.basename(local_file_path) in filtered_remote_files.keys()
+            if (os.path.basename(local_file_path) in existing_remote_files_with_hashes.keys()
                     and self._verify_file_integrity(
                         local_file_path, None, self.bucket_name,
-                        filtered_remote_files[os.path.basename(local_file_path)], local_hash)):
-                    self._logger.info(
-                        f"Skipping already uploaded file: {os.path.basename(local_file_path)}")
-                    continue
-            else:
-                relative_path = os.path.relpath(local_file_path, self.files_path)
-                remote_path = urljoin(remote_prefix, relative_path)
-                files_to_upload.append((local_file_path, remote_path))
+                        existing_remote_files_with_hashes[os.path.basename(local_file_path)], local_hash)):
+                self._logger.info(
+                    f"Skipping already uploaded file: {os.path.basename(local_file_path)}")
+                continue
+
+            relative_path = os.path.relpath(local_file_path, self.files_path)
+            remote_path = urljoin(remote_prefix, relative_path)
+            files_to_upload.append((local_file_path, remote_path, local_hash))
+
         return files_to_upload
 
     def _upload_file(
             self,
             local_file_path: str,
             remote_path: str,
-            check_for_existence: bool,
-            remote_prefix: str,
-            local_md5
+            local_md5: str
     ) -> bool:
         """
         Uploads a single file and checks for integrity.
 
         :param local_file_path: The path to the local file.
         :param remote_path: The path to the remote file.
-        :param check_for_existence: Whether to check for existing files.
+        :param local_md5: The MD5 hash of the local file.
         :return: True if the file was uploaded successfully, False otherwise.
         """
         try:
@@ -219,9 +223,8 @@ class OSUploader(
         # Step 3: Parallel Upload with Real-time Logging
         with ThreadPoolExecutor(max_workers=self._n_jobs) as executor:
             futures = {executor.submit(
-                self._upload_file, local, remote,
-                check_for_existence, remote_prefix, local_files_with_hashes[local]): (local, remote)
-                       for local, remote in files_to_upload}
+                self._upload_file, local, remote, local_md5): (local, remote)
+                       for local, remote, local_md5 in files_to_upload}
 
             for future in as_completed(futures):
                 local_file_path, remote_path = futures[future]
