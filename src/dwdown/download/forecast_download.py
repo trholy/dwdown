@@ -173,6 +173,24 @@ class ForecastDownloader(
 
         return min(parsed_dates), max(parsed_dates)
 
+    @staticmethod
+    def _set_grid_filter(grid: str | None) -> list:
+        """
+        Sets the grid filter based on the provided grid type.
+
+        :param grid: The type of grid, either 'icosahedral' or 'regular'.
+        :return: A list containing the grid type if valid, otherwise an empty list.
+        :raises ValueError: If the grid type is not 'icosahedral' or 'regular'.
+        """
+        if grid is None:
+            return []
+        elif grid in ['icosahedral', 'regular']:
+            return [grid]
+        else:
+            raise ValueError(
+                f"Parameter 'grid' must be either 'icosahedral' or 'regular'."
+                f" Got {grid}")
+
     def get_links(
             self,
             prefix: str | None = None,
@@ -208,10 +226,8 @@ class ForecastDownloader(
 
         include_pattern = self._string_to_list(include_pattern)
         exclude_pattern = self._string_to_list(exclude_pattern)
-        if self.grid == 'icosahedral':
-            exclude_pattern += ['regular']
-        elif self.grid == 'regular':
-            exclude_pattern += ['icosahedral']
+
+        include_pattern += self._set_grid_filter(self.grid)
 
         filenames = self._get_filenames_from_url()
         if not filenames:
