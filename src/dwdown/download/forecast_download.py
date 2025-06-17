@@ -105,6 +105,7 @@ class ForecastDownloader(
                 " must be provided.")
 
         self.downloaded_files = []
+        self._downloaded_files_paths = []
         self.failed_files = []
 
         self.download_links = []
@@ -260,6 +261,7 @@ class ForecastDownloader(
             filename = os.path.basename(link)
             downloaded_file_path = os.path.join(self.files_path, filename)
             downloaded_file_path = os.path.normpath(downloaded_file_path)
+            self._downloaded_files_paths.append(downloaded_file_path)
 
             # Check if file already exists
             if check_for_existence and os.path.exists(downloaded_file_path):
@@ -365,5 +367,5 @@ class ForecastDownloader(
 
         :return: None
         """
-        self._delete_files_safely(self.downloaded_files, "downloaded file")
+        self._delete_files_safely(self._downloaded_files_paths, "downloaded file")
         self._cleanup_empty_dirs(self.files_path)
