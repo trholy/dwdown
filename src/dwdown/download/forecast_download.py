@@ -217,10 +217,9 @@ class ForecastDownloader(
         if not filenames:
             return []
 
-        include_pattern = self._process_timesteps(
+        timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep,
-            include_pattern=include_pattern)
+            max_timestep=max_timestep)
 
         filtered_filenames = self._simple_filename_filter(
             filenames=filenames,
@@ -228,7 +227,8 @@ class ForecastDownloader(
             suffix=suffix,
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
-            skip_time_step_filtering_variables=skip_time_step_filtering_variables)
+            skip_time_step_filtering_variables=skip_time_step_filtering_variables,
+            timesteps=timesteps)
 
         filtered_filenames = [urljoin(self.url, file) for file in filtered_filenames]
 

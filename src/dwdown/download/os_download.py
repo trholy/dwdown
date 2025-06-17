@@ -199,18 +199,18 @@ class OSDownloader(
         include_pattern = self._string_to_list(include_pattern)
         exclude_pattern = self._string_to_list(exclude_pattern)
 
-        include_pattern_with_timesteps = self._process_timesteps(
+        timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep,
-            include_pattern=include_pattern)
+            max_timestep=max_timestep)
 
         filtered_files = self._simple_filename_filter(
             filenames=list(remote_files_with_hashes.keys()),
             prefix=remote_prefix,
             suffix=suffix,
-            include_pattern=include_pattern_with_timesteps,
+            include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
-            skip_time_step_filtering_variables=skip_time_step_filtering_variables)
+            skip_time_step_filtering_variables=skip_time_step_filtering_variables,
+            timesteps=timesteps)
 
         filtered_files = self._advanced_filename_filter(
             filenames=filtered_files,

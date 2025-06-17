@@ -70,15 +70,13 @@ class DateHandler:
     @staticmethod
     def _process_timesteps(
         min_timestep: str | int | None = None,
-        max_timestep: str | int | None = None,
-        include_pattern: list[str] | None = None
+        max_timestep: str | int | None = None
     ) -> list[str]:
         """
         Processes timesteps and returns a list of formatted timesteps.
 
         :param min_timestep: Minimum timestep value.
         :param max_timestep: Maximum timestep value.
-        :param include_pattern: List of existing timesteps to extend.
         :return: List of formatted timesteps.
         """
         # Assign default values using `or`
@@ -86,17 +84,16 @@ class DateHandler:
         max_timestep = int(max_timestep) if max_timestep is not None else 48
 
         # Ensure they are integers
-        if isinstance(min_timestep, int) and isinstance(max_timestep, int):
-            pattern = [
-                f"_{str(t).zfill(3)}_"
-                for t in range(min_timestep, max_timestep + 1)]
+        if (not isinstance(min_timestep, int)
+                or not isinstance(max_timestep, int)):
+            raise ValueError(
+                "min_timestep and max_timestep must be convertible to integers.")
 
-            if isinstance(include_pattern, list):
-                include_pattern.extend(pattern)
-            else:
-                include_pattern = pattern
-
-        return include_pattern
+        # Generate the list of formatted timesteps
+        return [
+            f"_{str(t).zfill(3)}_"
+            for t in range(min_timestep, max_timestep + 1)
+        ]
 
 
 class TimeHandler:

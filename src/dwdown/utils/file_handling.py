@@ -71,7 +71,8 @@ class FileHandler:
             suffix: str = "",
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
-            skip_time_step_filtering_variables: list[str] | None = None
+            skip_time_step_filtering_variables: list[str] | None = None,
+            timesteps: list[str] | None = None
     ) -> list[str]:
         """
         Filters filenames based on specified criteria.
@@ -99,7 +100,8 @@ class FileHandler:
             filename for filename in filenames
             if filename.startswith(prefix)
                and filename.endswith(suffix)
-               and any(pattern in filename for pattern in include_pattern)
+               and all(pattern in filename for pattern in include_pattern)
+               and any(ts in filename for ts in timesteps)
                and not any(pattern in filename for pattern in exclude_pattern)]
 
         if skip_time_step_filtering_variables:

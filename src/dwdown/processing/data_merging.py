@@ -104,10 +104,11 @@ class DataMerger(
             csv_files_path = self._search_directory(variable_files_path, ".csv")
 
             if variable_mapped not in skip_time_step_filtering_variables_mapped:
-                include_pattern = self._process_timesteps(
+                timesteps = self._process_timesteps(
                     min_timestep=time_step,
-                    max_timestep=time_step,
-                    include_pattern=include_pattern)
+                    max_timestep=time_step)
+            else:
+                timesteps = []
 
             filtered_files = self._simple_filename_filter(
                 filenames=csv_files_path,
@@ -115,7 +116,8 @@ class DataMerger(
                 suffix=suffix,
                 include_pattern=include_pattern,
                 exclude_pattern=exclude_pattern,
-                skip_time_step_filtering_variables=skip_time_step_filtering_variables)
+                skip_time_step_filtering_variables=skip_time_step_filtering_variables,
+                timesteps=timesteps)
 
             selected_files = self._match_filenames_by_patterns(
                 filenames=filtered_files,

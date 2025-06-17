@@ -207,10 +207,9 @@ class OSUploader(
         filenames = self._search_directory(self.files_path)
         filenames = self._flatten_list(filenames)
 
-        include_pattern = self._process_timesteps(
+        timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep,
-            include_pattern=include_pattern)
+            max_timestep=max_timestep)
 
         filtered_filenames = self._simple_filename_filter(
             filenames=filenames,
@@ -218,7 +217,8 @@ class OSUploader(
             suffix=suffix,
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
-            skip_time_step_filtering_variables=skip_time_step_filtering_variables)
+            skip_time_step_filtering_variables=skip_time_step_filtering_variables,
+            timesteps=timesteps)
 
         filtered_filenames = self._advanced_filename_filter(
             filenames=filtered_filenames,

@@ -194,11 +194,9 @@ class GribFileManager(
         :param variables: Variables to filter by.
         :return: List of filenames.
         """
-
-        include_pattern = self._process_timesteps(
+        timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep,
-            include_pattern=include_pattern)
+            max_timestep=max_timestep)
 
         filenames = self._search_directory(self.files_path)
         filenames = self._flatten_list(filenames)
@@ -209,7 +207,8 @@ class GribFileManager(
             suffix=suffix,
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
-            skip_time_step_filtering_variables=skip_time_step_filtering_variables)
+            skip_time_step_filtering_variables=skip_time_step_filtering_variables,
+            timesteps=timesteps)
 
         filtered_files = self._advanced_filename_filter(
             filenames=filtered_files,
