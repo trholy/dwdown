@@ -113,8 +113,9 @@ class TimeHandler:
             self,
             utc: bool = True,
             time_of_day: bool = False,
-            date_format: str | None = None
-    ) -> str:
+            date_format: str | None = None,
+            convert_to_str: bool = True
+    ) -> str | datetime:
         """
         Gets the current date in a formatted string.
 
@@ -139,6 +140,7 @@ class TimeHandler:
             formatted_datetime = formatted_datetime.replace(hour=0, minute=0)
 
         # Convert datetime object to string using strftime()
-        formatted_date_str = formatted_datetime.strftime(date_format)
+        if convert_to_str:
+            formatted_datetime = formatted_datetime.strftime(date_format)
 
-        return formatted_date_str
+        return formatted_datetime
