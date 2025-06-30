@@ -106,10 +106,11 @@ class TimeHandler:
         """
         Initializes the TimeHandler.
 
+        :param date_format: The default date format to use.
         """
         self._date_format = date_format or "%d-%m-%Y-%H:%M"
 
-    def _get_current_date(
+    def get_current_date(
             self,
             utc: bool = True,
             time_of_day: bool = False,
@@ -117,30 +118,45 @@ class TimeHandler:
             convert_to_str: bool = True
     ) -> str | datetime:
         """
-        Gets the current date in a formatted string.
+        Gets the current date in a formatted string or datetime object.
 
         :param utc: Whether to use UTC time.
         :param time_of_day: Whether to include the time of day.
-        :return: Formatted date string.
+        :param date_format: The date format to use. Defaults to the instance's date format.
+        :param convert_to_str: Whether to return the result as a string.
+        :return: Formatted date string or datetime object.
         """
         date_format = date_format or self._date_format
+        now = self._get_current_datetime(utc)
 
-        # Get current datetime
-        if utc:
-            now = datetime.now(timezone.utc)
-        else:
-            now = datetime.now()
-
-        # Format as string and parse back to enforce "DD-MMM-YYYY-HH:MM" format
-        formatted_str = now.strftime(date_format)
-        formatted_datetime = datetime.strptime(formatted_str, date_format)
-
-        # If time_of_day is False, reset time to midnight
         if not time_of_day:
-            formatted_datetime = formatted_datetime.replace(hour=0, minute=0)
+            now = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Convert datetime object to string using strftime()
         if convert_to_str:
-            formatted_datetime = formatted_datetime.strftime(date_format)
+            return self._format_datetime(now, date_format)
 
-        return formatted_datetime
+        return now
+
+    @staticmethod
+    def _get_current_datetime(utc: bool) -> datetime:
+        """
+        Gets the current datetime.
+
+        :param utc: Whether to use UTC time.
+        :return: Current datetime.
+        """
+        return datetime.now(UTC) if utc else datetime.now()
+
+    @staticmethod
+    def _format_datetime(dt: datetime, date_format: str) -> str:
+        """
+        Formats a datetime object to a string.
+
+        :param dt: The datetime object to format.
+        :param date_format: The date format to use.
+        :return: Formatted date string.
+        """
+        try:
+            return dt.strftime(date_format)
+        except ValueError as e:
+            raise ValueError(f"Invalid date format: {date_format}") from e
