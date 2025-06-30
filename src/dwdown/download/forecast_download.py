@@ -251,7 +251,8 @@ class ForecastDownloader(
         filtered_filenames = self._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
-            variables=self._string_to_list(self.variable))
+            variables=self.variable if self.variable is None
+            else self._string_to_list(self.variable))
 
         self.download_links = filtered_filenames
         self._raw_filenames = filenames
