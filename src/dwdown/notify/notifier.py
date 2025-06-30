@@ -85,8 +85,8 @@ class Notifier(Utilities):
         except requests.RequestException as e:
             self._logger.error(f"Failed to send notification: {e}")
 
-    @staticmethod
     def _format_dict_message(
+            self,
             msg_dict: dict[str, list[str]],
             script_name: str | None = None
     ) -> str:
@@ -103,6 +103,7 @@ class Notifier(Utilities):
         for category, values in msg_dict.items():
             category_header = f"\n{script_name} - {category}" \
                 if script_name else f"\n{category}"
+            values = self._ensure_strings(values)
             message_parts.append(category_header)
             message_parts.extend(values)
 
@@ -129,9 +130,20 @@ class Notifier(Utilities):
 
         if isinstance(msg_input, list):
             msg_list = msg_input.copy()
+            msg_list = self._ensure_strings(msg_list)
             if script_name:
                 msg_list.insert(0, script_name)
             return "\n".join(msg_list)
         self._logger.error(
             "Invalid message format. Expected str, list, or dict.")
         return ""
+
+    @staticmethod
+    def _ensure_strings(items: list) -> list[str]:
+        """
+        Ensures all items in the list are strings.
+
+        :param items: List of items to convert to strings.
+        :return: List of strings.
+        """
+        return [str(item) for item in items]
