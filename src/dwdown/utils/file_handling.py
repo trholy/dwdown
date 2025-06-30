@@ -72,7 +72,8 @@ class FileHandler:
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
             skip_time_step_filtering_variables: list[str] | None = None,
-            timesteps: list[str] | None = None
+            timesteps: list[str] | None = None,
+            norm_path: bool = True
     ) -> list[str]:
         """
         Filters filenames based on specified criteria.
@@ -93,7 +94,8 @@ class FileHandler:
         prefix = prefix or ""
         suffix = suffix or ""
 
-        filenames = [os.path.normpath(filename) for filename in filenames]
+        if norm_path:
+            filenames = [os.path.normpath(filename) for filename in filenames]
         filtered_filenames = [
             filename for filename in filenames
             if filename.startswith(prefix)
