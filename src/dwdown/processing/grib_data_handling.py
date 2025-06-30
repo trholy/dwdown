@@ -275,7 +275,7 @@ class GribFileManager(
 
     def delete(
             self,
-            delete_downloaded: bool = True,
+            delete_downloaded: bool = False,
             delete_decompressed: bool = True,
             converted_files: bool = False
     ) -> None:
