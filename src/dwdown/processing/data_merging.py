@@ -150,9 +150,9 @@ class DataMerger(
                         df['valid_time'], 'valid_time')
 
                     # If additional pattern, rename the mapped variable column
-                    variable_name = f"{variable_mapped}_{additional_pattern}" \
-                         if additional_pattern else variable_mapped
-                    #variable_name = f"{variable_mapped}_{additional_pattern}"
+                    # variable_name = f"{variable_mapped}_{additional_pattern}" \
+                    #     if additional_pattern else variable_mapped
+                    variable_name = f"{variable_mapped}_{additional_pattern}"
                     df = df.rename(columns={variable_mapped: variable_name})
 
                     filtered_df = self._filter_dataframe(
