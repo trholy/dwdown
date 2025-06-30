@@ -210,7 +210,8 @@ class OSDownloader(
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
             skip_time_step_filtering_variables=skip_time_step_filtering_variables,
-            timesteps=timesteps)
+            timesteps=timesteps,
+            norm_path=False)
 
         filtered_files = self._advanced_filename_filter(
             filenames=filtered_files,
