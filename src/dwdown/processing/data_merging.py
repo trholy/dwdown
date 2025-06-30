@@ -235,3 +235,12 @@ class DataMerger(
             return None
 
         return matching_files
+
+    def delete(self) -> None:
+        """
+        Deletes local files after successful processing.
+
+        """
+        self._delete_files_safely(
+            self.selected_csv_files, "csv file")
+        self._cleanup_empty_dirs(self.files_path)
