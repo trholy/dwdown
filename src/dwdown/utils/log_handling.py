@@ -93,7 +93,7 @@ class LogHandler:
         if isinstance(variable_name, str):
             variable_name = variable_name + '_'
 
-        time_stamp = self._get_current_date(time_of_day=True, convert_to_str=True)
+        time_stamp = self.get_current_date(time_of_day=True, convert_to_str=True)
         formatted_time_stamp = re.sub(r"[-:\s]", "_", time_stamp)
         log_file_name = (f"{self._log_file_path}/{self.__class__.__name__}_"
                          f"{variable_name}{file_category}_{formatted_time_stamp}.log")
