@@ -63,7 +63,7 @@ class Utilities:
         :return: List of mapped variable names.
         """
         if isinstance(variables, list):
-            return [mapping_dictionary.get(var, var) for var in variables]
+            return [mapping_dictionary.get(var.lower(), var) for var in variables]
         return []
 
     @staticmethod
