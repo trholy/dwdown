@@ -16,7 +16,7 @@ class DataMerger(
     def __init__(
             self,
             files_path: str,
-            join_method: str = 'outer',
+            join_method: str | None =  None,
             additional_patterns: dict[str, list[int] | int] | None = None,
             mapping_dictionary: dict[str, str] | None = None,
             required_columns: set[str] | None = None,
@@ -53,7 +53,7 @@ class DataMerger(
 
         self._required_columns = required_columns or {
             'latitude', 'longitude', 'valid_time'}
-        self._join_method = join_method
+        self._join_method = join_method or 'outer'
         self._index_col = index_col
         self._sep = sep
 
