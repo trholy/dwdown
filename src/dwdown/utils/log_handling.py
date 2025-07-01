@@ -66,7 +66,8 @@ class LogHandler:
                 file_handler.setFormatter(file_formatter)
                 logger.addHandler(file_handler)
             except Exception as e:
-                raise RuntimeError(f"Failed to create log file {log_file_path}: {e}")
+                raise RuntimeError(
+                    f"Failed to create log file {log_file_path}: {e}") from e
 
         return logger
 
