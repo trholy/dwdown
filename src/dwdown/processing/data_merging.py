@@ -2,13 +2,8 @@ import os
 
 import pandas as pd
 
-from ..utils import (
-    Utilities, LogHandler,
-    FileHandler,
-    DateHandler,
-    DataFrameOperator)
-
 from ..data import MappingStore
+from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Utilities
 
 
 class DataMerger(
