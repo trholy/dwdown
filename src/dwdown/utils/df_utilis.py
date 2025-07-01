@@ -174,7 +174,8 @@ class DataFrameOperator:
 
         return merged_df
 
-    def _arrange_df(self, df: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def _arrange_df(df: pd.DataFrame) -> pd.DataFrame:
         """
         Sorts and arranges the DataFrame columns.
 
