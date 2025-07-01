@@ -1,8 +1,7 @@
 import logging
+from urllib.parse import urlparse, urlunparse
 
 import requests
-
-from urllib.parse import urlparse, urlunparse
 
 from ..utils import Utilities
 
