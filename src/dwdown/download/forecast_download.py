@@ -3,18 +3,19 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 from lxml import html
 
-from urllib.parse import urlparse
-
 from ..utils import (
-    Utilities, LogHandler,
+    DateHandler,
     FileHandler,
-    TimeHandler, DateHandler,
-    SessionHandler)
+    LogHandler,
+    SessionHandler,
+    TimeHandler,
+    Utilities,
+)
 
 
 class ForecastDownloader(
