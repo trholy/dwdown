@@ -86,6 +86,7 @@ class DataMerger(
         df_column_len = []
 
         variables = self._string_to_list(variables)
+        variables = [variable.lower() for variable in variables]
         variables_mapped = self._variable_mapping(variables, self.mapping_dict)
 
         skip_time_step_filtering_variables = self._string_to_list(
