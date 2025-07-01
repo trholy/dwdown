@@ -52,7 +52,7 @@ class SessionHandler:
 
             return session
         except Exception as e:
-            raise RuntimeError(f"Failed to create session: {e}")
+            raise RuntimeError(f"Failed to create session: {e}") from e
 
     def get_session(self) -> Session:
         """
@@ -111,7 +111,7 @@ class ClientHandler:
                 secure=self._secure)
             return client
         except Exception as e:
-            raise RuntimeError(f"Failed to create MinIO client: {e}")
+            raise RuntimeError(f"Failed to create MinIO client: {e}") from e
 
     def get_client(self) -> Minio:
         """
