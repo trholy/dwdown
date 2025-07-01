@@ -31,6 +31,7 @@ class DataFrameOperator:
         mapped_columns = {
             mapping_dictionary.get(col, col) for col in required_columns}
         mapped_variable = mapping_dictionary.get(variable, variable)
+        mapped_columns.add(mapped_variable)
 
         missing_columns = mapped_columns - set(df.columns)
         if missing_columns:
