@@ -1,15 +1,11 @@
-import os
-
 import bz2
-import shutil
-import xarray as xr
 import glob
+import os
+import shutil
 
-from ..utils import (
-    Utilities, LogHandler,
-    FileHandler,
-    DateHandler,
-    DataFrameOperator)
+import xarray as xr
+
+from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Utilities
 
 
 class GribFileManager(
