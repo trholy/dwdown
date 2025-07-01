@@ -3,10 +3,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ..utils import (
-    Utilities, LogHandler,
+    ClientHandler,
+    DateHandler,
     FileHandler,
-    DateHandler, TimeHandler,
-    ClientHandler, OSHandler)
+    LogHandler,
+    OSHandler,
+    TimeHandler,
+    Utilities,
+)
 
 
 class OSDownloader(
