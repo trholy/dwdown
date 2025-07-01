@@ -15,6 +15,9 @@ class MappingStore:
         :return: A dictionary mapping variable names to their corresponding values.
         """
         return {
+            'latitude': 'latitude',
+            'longitude': 'longitude',
+            'valid_time': 'valid_time',
             'aswdifd_s': 'ASWDIFD_S',
             'aswdir_s': 'ASWDIR_S',
             'cape_ml': 'CAPE_ML',
