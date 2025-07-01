@@ -1,4 +1,4 @@
-from .date_time_utilis import TimeHandler, DateHandler
+from .date_time_utilis import DateHandler, TimeHandler
 from .df_utilis import DataFrameOperator
 from .file_handling import FileHandler
 from .general_utilis import Utilities
@@ -7,13 +7,13 @@ from .network_handling import ClientHandler, SessionHandler
 from .os_handling import OSHandler
 
 __all__ = [
-    "TimeHandler",
-    "DateHandler",
-    "DataFrameOperator",
-    "FileHandler",
-    "Utilities",
-    "LogHandler",
     "ClientHandler",
+    "DataFrameOperator",
+    "DateHandler",
+    "FileHandler",
+    "LogHandler",
+    "OSHandler",
     "SessionHandler",
-    "OSHandler"
+    "TimeHandler",
+    "Utilities"
 ]
