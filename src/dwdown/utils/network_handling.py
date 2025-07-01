@@ -1,7 +1,7 @@
-from requests.adapters import HTTPAdapter
-from requests import Session
-from urllib3.util.retry import Retry
 from minio import Minio
+from requests import Session
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class SessionHandler:
