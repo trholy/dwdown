@@ -4,9 +4,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urljoin
 
 from ..utils import (
-    Utilities, LogHandler, FileHandler,
-    TimeHandler, DateHandler,
-    ClientHandler, OSHandler)
+    ClientHandler,
+    DateHandler,
+    FileHandler,
+    LogHandler,
+    OSHandler,
+    TimeHandler,
+    Utilities,
+)
 
 
 class OSUploader(
