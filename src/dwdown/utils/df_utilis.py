@@ -35,9 +35,8 @@ class DataFrameOperator:
 
         missing_columns = mapped_columns - set(df.columns)
         if missing_columns:
-            self._logger.error(
-                f"Missing required columns in DataFrame: {missing_columns}. "
-                f"Skipping variable: {variable} (expected: {mapped_variable}).")
+            self._logger.warning(
+                f"Missing required columns in DataFrame: {missing_columns}.")
             return False
         return True
 
