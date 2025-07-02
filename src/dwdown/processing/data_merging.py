@@ -60,6 +60,52 @@ class DataMerger(
 
         self.selected_csv_files = []
 
+    def _process_dataframe(
+            self,
+            df: pd.DataFrame,
+            variable_mapped: str,
+            additional_pattern: str | None = None,
+            skip_variable_validation: bool = False
+    ) -> pd.DataFrame | None:
+        """
+        Processes a DataFrame by validating columns, parsing datetime,
+         renaming columns, and filtering the DataFrame.
+
+        :param df: DataFrame to process.
+        :param variable_mapped: Mapped variable name.
+        :param additional_pattern: Additional pattern to append to the
+         variable name.
+        :param skip_variable_validation: If True, skip column validation.
+        :return: Processed DataFrame or None if validation fails and skipping
+         is not allowed.
+        """
+        columns_exist = self._validate_columns_exist(
+            df, self._required_columns, variable_mapped, self._mapping_dict)
+
+        if not columns_exist and not skip_variable_validation:
+            self._logger.warning(f"Skipping variable: {variable_mapped}.")
+            return None
+
+        df['valid_time'] = self._parse_datetime(
+            df['valid_time'], 'valid_time')
+
+        if not columns_exist and skip_variable_validation:
+            variable_df_name = df.columns[-1]
+            self._logger.warning(
+                f"Variable validation is skipped."
+                f" Using variable: {variable_df_name} from DataFrame.")
+            variable_name = f"{variable_df_name}_{additional_pattern}"\
+                if additional_pattern else variable_df_name
+        else:
+            variable_name = f"{variable_mapped}_{additional_pattern}"\
+                if additional_pattern else variable_mapped
+
+        if variable_name != variable_mapped:
+            df = df.rename(columns={variable_mapped: variable_name})
+
+        return self._filter_dataframe(
+            df, self._required_columns, variable_name)
+
     def merge(
             self,
             time_step: str | int,
@@ -68,7 +114,8 @@ class DataMerger(
             suffix: str | None = None,
             include_pattern: list[str] | None = None,
             exclude_pattern: list[str] | None = None,
-            skip_time_step_filtering_variables: list[str] | None = None
+            skip_time_step_filtering_variables: list[str] | None = None,
+            skip_variable_validation: bool = False
     ) -> pd.DataFrame | None:
         """
         Merges dataframes based on the provided parameters.
@@ -80,6 +127,8 @@ class DataMerger(
         :param include_pattern: Patterns to include in filenames.
         :param exclude_pattern: Patterns to exclude from filenames.
         :param skip_time_step_filtering_variables: Variables to skip time step filtering.
+        :param skip_variable_validation: If True, use the last column of the
+         DataFrame as the variable column.
         :return: Merged dataframe or None if no valid dataframes are found.
         """
         dataframe_list = []
@@ -137,25 +186,12 @@ class DataMerger(
                 if df is None:
                     continue
 
-                df_column_len.append(df.shape[0])
-                columns_exist = self._validate_columns_exist(
-                    df, self._required_columns, variable_mapped, self.mapping_dict)
+                filtered_df = self._process_dataframe(
+                    df, variable_mapped, additional_pattern, skip_variable_validation)
 
-                if columns_exist:
-                    df['valid_time'] = self._parse_datetime(
-                        df['valid_time'], 'valid_time')
-
-                    # If additional pattern, rename the mapped variable column
-                    variable_name = f"{variable_mapped}_{additional_pattern}" \
-                         if additional_pattern else variable_mapped
-                    #variable_name = f"{variable_mapped}_{additional_pattern}"
-                    df = df.rename(columns={variable_mapped: variable_name})
-
-                    filtered_df = self._filter_dataframe(
-                        df,
-                        self._required_columns,
-                        variable_name)
+                if filtered_df is not None:
                     dataframe_list.append(filtered_df)
+                    df_column_len.append(filtered_df.shape[0])
 
         if not dataframe_list:
             self._logger.error("No valid dataframes found. Merging aborted.")
