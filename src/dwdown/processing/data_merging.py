@@ -2,19 +2,15 @@ import os
 
 import pandas as pd
 
-from dwdown.data import MappingStore
-from dwdown.utils import (
-    DataFrameOperator,
-    DateHandler,
-    FileHandler,
-    LogHandler,
-    Utilities,
-)
+from dwdown.data.mapping import MappingStore
+from dwdown.utils.date_time_utilis import DateHandler
+from dwdown.utils.df_utilis import DataFrameOperator
+from dwdown.utils.file_handling import FileHandler
+from dwdown.utils.general_utilis import Utilities
+from dwdown.utils.log_handling import LogHandler
 
 
-class DataMerger(
-    Utilities, LogHandler, FileHandler, DateHandler, DataFrameOperator, MappingStore
-):
+class DataMerger:
     def __init__(
             self,
             files_path: str,
@@ -41,17 +37,31 @@ class DataMerger(
         self.files_path = os.path.normpath(files_path or "converted_files")
         self.log_files_path = os.path.normpath(log_files_path or "log_files")
 
-        Utilities.__init__(self)
+        # Initialize Utilities and DateHandler
+        self.utilities = Utilities()
+        self.datehandler = DateHandler()
 
-        FileHandler.__init__(self)
-        self._ensure_directories_exist([self.files_path, self.log_files_path])
+        # Initialize Logger
+        self.loghandler = LogHandler(
+            timehandler=None,  # Not needed for basic logging setup if unused, or pass TimeHandler()
+            log_file_path=self.log_files_path,
+            log_to_console=True,
+            log_to_file=True
+        )
+        self._logger = self.loghandler.get_logger()
 
-        LogHandler.__init__(self, self.log_files_path, True, True)
-        self._logger = self.get_logger()
+        # Initialize FileHandler
+        self.filehandler = FileHandler(
+            logger=self._logger,
+            utilities=self.utilities
+        )
+        self.filehandler._ensure_directories_exist([self.files_path, self.log_files_path])
 
-        DateHandler.__init__(self)
-        DataFrameOperator.__init__(self)
-        MappingStore.__init__(self)
+        # Initialize DataFrameOperator
+        self.dataframe_operator = DataFrameOperator(logger=self._logger)
+
+        # Initialize MappingStore
+        self.mappingstore = MappingStore()
 
         self._required_columns = required_columns or {
             'latitude', 'longitude', 'valid_time'
@@ -60,7 +70,7 @@ class DataMerger(
         self._index_col = index_col
         self._sep = sep
 
-        self.mapping_dict = self.get_mapping_dict()
+        self.mapping_dict = self.mappingstore.get_mapping_dict()
         if mapping_dictionary is not None:
             self.mapping_dict.update(mapping_dictionary)
 
@@ -87,15 +97,15 @@ class DataMerger(
         :return: Processed DataFrame or None if validation fails and skipping
          is not allowed.
         """
-        columns_exist = self._validate_columns_exist(
-            df, self._required_columns, variable_mapped, self._mapping_dict
+        columns_exist = self.dataframe_operator._validate_columns_exist(
+            df, self._required_columns, variable_mapped, self.mapping_dict
         )
 
         if not columns_exist and not skip_variable_validation:
             self._logger.warning(f"Skipping variable: {variable_mapped}.")
             return None
 
-        df['valid_time'] = self._parse_datetime(
+        df['valid_time'] = self.dataframe_operator._parse_datetime(
             df['valid_time'], 'valid_time'
         )
 
@@ -114,7 +124,7 @@ class DataMerger(
         if variable_name != variable_mapped:
             df = df.rename(columns={variable_mapped: variable_name})
 
-        return self._filter_dataframe(
+        return self.dataframe_operator._filter_dataframe(
             df, self._required_columns, variable_name)
 
     def merge(
@@ -145,31 +155,31 @@ class DataMerger(
         dataframe_list = []
         df_column_len = []
 
-        variables = self._string_to_list(variables)
+        variables = self.utilities._string_to_list(variables)
         variables = [variable.lower() for variable in variables]
-        variables_mapped = self._variable_mapping(variables, self.mapping_dict)
+        variables_mapped = self.utilities._variable_mapping(variables, self.mapping_dict)
 
-        skip_time_step_filtering_variables = self._string_to_list(
+        skip_time_step_filtering_variables = self.utilities._string_to_list(
             skip_time_step_filtering_variables
         )
-        skip_time_step_filtering_variables_mapped = self._variable_mapping(
+        skip_time_step_filtering_variables_mapped = self.utilities._variable_mapping(
             skip_time_step_filtering_variables, self.mapping_dict
         )
 
         for variable, variable_mapped in zip(variables, variables_mapped, strict=False):
             variable_files_path = os.path.join(self.files_path, variable)
             variable_files_path = os.path.normpath(variable_files_path)
-            csv_files_path = self._search_directory(variable_files_path, ".csv")
+            csv_files_path = self.filehandler._search_directory(variable_files_path, ".csv")
 
             if variable_mapped not in skip_time_step_filtering_variables_mapped:
-                timesteps = self._process_timesteps(
+                timesteps = self.datehandler._process_timesteps(
                     min_timestep=time_step,
                     max_timestep=time_step
                 )
             else:
                 timesteps = []
 
-            filtered_files = self._simple_filename_filter(
+            filtered_files = self.filehandler._simple_filename_filter(
                 filenames=csv_files_path,
                 prefix=prefix,
                 suffix=suffix,
@@ -191,15 +201,15 @@ class DataMerger(
                 )
                 continue
 
-            selected_files = self._string_to_list(selected_files)
+            selected_files = self.utilities._string_to_list(selected_files)
 
             if isinstance(selected_files, (str, list)):
                 self.selected_csv_files.extend(selected_files)
 
             for csv_file in selected_files:
-                additional_pattern = self._extract_additional_pattern(csv_file)
+                additional_pattern = self.utilities._extract_additional_pattern(csv_file)
 
-                df = self._read_df_from_csv(csv_file)
+                df = self.dataframe_operator._read_df_from_csv(csv_file)
                 if df is None:
                     continue
 
@@ -224,14 +234,14 @@ class DataMerger(
 
         merged_df = dataframe_list[0]
         for df in dataframe_list[1:]:
-            merged_df = self._merge_dataframes(
+            merged_df = self.dataframe_operator._merge_dataframes(
                 merged_df,
                 df,
                 self._required_columns,
                 self._join_method
             )
 
-        arranged_df = self._arrange_df(merged_df)
+        arranged_df = self.dataframe_operator._arrange_df(merged_df)
 
         return arranged_df.reset_index(drop=True)
 
@@ -254,7 +264,7 @@ class DataMerger(
 
         for file in filenames:
             filename = os.path.basename(file)
-            additional_pattern = self._extract_additional_pattern(filename)
+            additional_pattern = self.utilities._extract_additional_pattern(filename)
             detected_patterns.add(additional_pattern)
 
             if additional_pattern is None or expected_patterns is None:
@@ -296,6 +306,6 @@ class DataMerger(
         Deletes local files after successful processing.
 
         """
-        self._delete_files_safely(
+        self.filehandler._delete_files_safely(
             self.selected_csv_files, "csv file")
-        self._cleanup_empty_dirs(self.files_path)
+        self.filehandler._cleanup_empty_dirs(self.files_path)

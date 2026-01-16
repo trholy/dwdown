@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import logging
 import os
 import re
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from .date_time_utilis import TimeHandler
+if TYPE_CHECKING:
+    from dwdown.utils.date_time_utilis import TimeHandler
 
 
-class LogHandler(TimeHandler):
+class LogHandler:
     """
     A class to handle logging for other classes.
 
@@ -18,6 +22,7 @@ class LogHandler(TimeHandler):
 
     def __init__(
             self,
+            timehandler: TimeHandler,
             log_file_path: str | None = None,
             log_to_console: bool = True,
             log_to_file: bool = True
@@ -36,7 +41,7 @@ class LogHandler(TimeHandler):
 
         self._logger = self._setup_logger()
 
-        TimeHandler.__init__(self)
+        self._timehandler = timehandler
 
     def _setup_logger(self) -> logging.Logger:
         """
@@ -98,7 +103,7 @@ class LogHandler(TimeHandler):
         if isinstance(variable_name, str):
             variable_name = variable_name + '_'
 
-        time_stamp = self.get_current_date(time_of_day=True, convert_to_str=True)
+        time_stamp = self._timehandler.get_current_date(time_of_day=True, convert_to_str=True)
         formatted_time_stamp = re.sub(r"[-:\s]", "_", time_stamp)
         log_file_name = os.path.normpath(os.path.join(
             self._log_file_path,

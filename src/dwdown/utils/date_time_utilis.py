@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import logging
 import re
 from datetime import UTC, datetime
 
@@ -39,13 +42,15 @@ class DateHandler:
     def _parse_dates(
             self,
             date_strings: list[str],
-            date_pattern: str | None = None
+            date_pattern: str | None = None,
+            logger: logging.Logger | None = None
     ) -> list[datetime]:
         """
         Parses date strings into datetime objects.
 
         :param date_strings: List of date strings to be parsed.
         :param date_pattern: The format pattern for parsing dates.
+        :param logger: Optional logger for logging warnings.
         :return: List of parsed datetime objects.
         """
         date_pattern = date_pattern or "%d-%b-%Y-%H:%M:%S"
@@ -55,7 +60,8 @@ class DateHandler:
             try:
                 parsed_dates.append(datetime.strptime(date, date_pattern))
             except ValueError as e:
-                self._logger.info(f"Skipping invalid date format: {date} ({e})")
+                if logger:
+                    logger.info(f"Skipping invalid date format: {date} ({e})")
 
         return parsed_dates
 

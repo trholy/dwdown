@@ -3,6 +3,8 @@ import logging
 import os
 import re
 
+from dwdown.utils.general_utilis import Utilities
+
 
 class FileHandler:
     """
@@ -13,10 +15,18 @@ class FileHandler:
         logger (logging.Logger): Logger for logging messages.
     """
 
-    def __init__(self):
+    def __init__(
+            self,
+            logger: logging.Logger,
+            utilities: Utilities = Utilities(),
+    ):
         """
         Initializes the FileHandler.
+        :param logger: Logger instance.
+        :param utilities: Utilities instance.
         """
+        self._utilities = utilities
+        self.logger = logger
 
     @staticmethod
     def _ensure_directory_exists(path: str) -> None:
@@ -62,7 +72,7 @@ class FileHandler:
                 # Extend the list with results from subdirectories
                 filenames.append(self._search_directory(entry.path))
 
-        return self._flatten_list(filenames)
+        return self._utilities._flatten_list(filenames)
 
     def _simple_filename_filter(
             self,
@@ -86,9 +96,9 @@ class FileHandler:
         :param skip_time_step_filtering_variables: List of variables to skip time step filtering.
         :return: List of filtered filenames.
         """
-        include_pattern = self._string_to_list(include_pattern)
-        exclude_pattern = self._string_to_list(exclude_pattern)
-        skip_time_step_filtering_variables = self._string_to_list(
+        include_pattern = self._utilities._string_to_list(include_pattern)
+        exclude_pattern = self._utilities._string_to_list(exclude_pattern)
+        skip_time_step_filtering_variables = self._utilities._string_to_list(
             skip_time_step_filtering_variables)
 
         prefix = prefix or ""
@@ -209,14 +219,14 @@ class FileHandler:
         for file_path in files:
             try:
                 os.remove(file_path)
-                self._logger.info(f"Deleted {label}: {file_path}")
+                self.logger.info(f"Deleted {label}: {file_path}")
             except FileNotFoundError:
-                self._logger.warning(
+                self.logger.warning(
                     f"{label.capitalize()} not found: {file_path}")
             except PermissionError:
-                self._logger.error(f"Permission denied: {file_path}")
+                self.logger.error(f"Permission denied: {file_path}")
             except OSError as e:
-                self._logger.error(
+                self.logger.error(
                     f"Error deleting {label}: {file_path}: {e.strerror}")
 
     def _cleanup_empty_dirs(self, base_path: str) -> None:
@@ -233,13 +243,13 @@ class FileHandler:
                 try:
                     if not os.listdir(dir_path):
                         os.rmdir(dir_path)
-                        self._logger.info(f"Deleted directory: {dir_path}")
+                        self.logger.info(f"Deleted directory: {dir_path}")
                 except FileNotFoundError:
-                    self._logger.warning(f"Directory not found: {dir_path}")
+                    self.logger.warning(f"Directory not found: {dir_path}")
                 except PermissionError:
-                    self._logger.error(
+                    self.logger.error(
                         f"Permission denied while accessing"
                         f" or deleting: {dir_path}")
                 except OSError as e:
-                    self._logger.error(
+                    self.logger.error(
                         f"Error deleting directory: {dir_path}: {e.strerror}")

@@ -2,21 +2,15 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from dwdown.utils import (
-    ClientHandler,
-    DateHandler,
-    FileHandler,
-    LogHandler,
-    OSHandler,
-    TimeHandler,
-    Utilities,
-)
+from dwdown.utils.date_time_utilis import DateHandler, TimeHandler
+from dwdown.utils.file_handling import FileHandler
+from dwdown.utils.general_utilis import Utilities
+from dwdown.utils.log_handling import LogHandler
+from dwdown.utils.network_handling import ClientHandler
+from dwdown.utils.os_handling import OSHandler
 
 
-class OSDownloader(
-    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, ClientHandler,
-    OSHandler
-):
+class OSDownloader:
     def __init__(
             self,
             endpoint: str,
@@ -57,25 +51,42 @@ class OSDownloader(
         self._n_jobs = n_jobs
         self._retry = retry
 
-        FileHandler.__init__(self)
-        self._ensure_directory_exists(self.log_files_path)
+        # Initialize Utilities and Date/Time handlers
+        self.utilities = Utilities()
+        self.timehandler = TimeHandler()
+        self.datehandler = DateHandler()
 
-        LogHandler.__init__(self, self.log_files_path, True, True)
-        self._logger = self.get_logger()
+        # Initialize Logger
+        self.loghandler = LogHandler(
+            timehandler=self.timehandler,
+            log_file_path=self.log_files_path,
+            log_to_console=True,
+            log_to_file=True
+        )
+        self._logger = self.loghandler.get_logger()
 
-        TimeHandler.__init__(self)
-        DateHandler.__init__(self)
-        ClientHandler.__init__(
-            self,
+        # Initialize Client
+        self.clienthandler = ClientHandler(
             endpoint=self._endpoint,
             access_key=self._access_key,
             secret_key=self._secret_key,
             secure=self._secure
         )
-        self._client = self.get_client()
+        self.client = self.clienthandler.get_client()
 
-        OSHandler.__init__(self)
-        Utilities.__init__(self)
+        # Initialize FileHandler
+        self.filehandler = FileHandler(
+            logger=self._logger,
+            utilities=self.utilities
+        )
+        self.filehandler._ensure_directory_exists(self.log_files_path)
+
+        # Initialize OSHandler
+        self.oshandler = OSHandler(
+            logger=self._logger,
+            client=self.client,
+            filehandler=self.filehandler
+        )
 
         self.remote_files = []
         self.downloaded_files = []
@@ -98,10 +109,10 @@ class OSDownloader(
             local_file_path = os.path.normpath(local_file_path)
 
             # Ensure the directory exists
-            self._ensure_directory_exists(os.path.dirname(local_file_path))
+            self.filehandler._ensure_directory_exists(os.path.dirname(local_file_path))
 
             # Skip if the file already exists and matches hash
-            if os.path.exists(local_file_path) and self._verify_file_integrity(
+            if os.path.exists(local_file_path) and self.oshandler._verify_file_integrity(
                     local_file_path, remote_path, self.bucket_name, remote_hash
             ):
                 self._logger.info(
@@ -135,7 +146,7 @@ class OSDownloader(
 
             # Check if file already exists and verify integrity
             if check_for_existence and os.path.exists(local_file_path):
-                if self._verify_file_integrity(
+                if self.oshandler._verify_file_integrity(
                         local_file_path, remote_path,
                         self.bucket_name, remote_hash
                 ):
@@ -143,12 +154,12 @@ class OSDownloader(
                         f"Skipping already downloaded file: {remote_path}")
                     return True
 
-            self._client.fget_object(
+            self.client.fget_object(
                 self.bucket_name, remote_path, local_file_path
             )
 
             # Verify integrity after download
-            if self._verify_file_integrity(
+            if self.oshandler._verify_file_integrity(
                 local_file_path, remote_path, self.bucket_name, remote_hash
             ):
                 self._logger.info(f"Successfully downloaded: {remote_path}")
@@ -177,8 +188,8 @@ class OSDownloader(
                 f"{len(self.corrupted_files)} files may be corrupted."
             )
 
-        self._write_log_file(self.downloaded_files, "downloaded_files")
-        self._write_log_file(self.corrupted_files, "corrupted_files")
+        self.loghandler._write_log_file(self.downloaded_files, "downloaded_files")
+        self.loghandler._write_log_file(self.corrupted_files, "corrupted_files")
 
     def download(
             self,
@@ -208,20 +219,20 @@ class OSDownloader(
         :param skip_time_step_filtering_variables: Variables to skip timestep filtering.
         :param variables: List of variables to filter by.
         """
-        self._ensure_bucket(self.bucket_name)
-        remote_files_with_hashes = self._fetch_existing_files(
+        self.oshandler._ensure_bucket(self.bucket_name)
+        remote_files_with_hashes = self.oshandler._fetch_existing_files(
             self.bucket_name, remote_prefix
         )
 
-        include_pattern = self._string_to_list(include_pattern)
-        exclude_pattern = self._string_to_list(exclude_pattern)
+        include_pattern = self.utilities._string_to_list(include_pattern)
+        exclude_pattern = self.utilities._string_to_list(exclude_pattern)
 
-        timesteps = self._process_timesteps(
+        timesteps = self.datehandler._process_timesteps(
             min_timestep=min_timestep,
             max_timestep=max_timestep
         )
 
-        filtered_files = self._simple_filename_filter(
+        filtered_files = self.filehandler._simple_filename_filter(
             filenames=list(remote_files_with_hashes.keys()),
             prefix=remote_prefix,
             suffix=suffix,
@@ -232,7 +243,7 @@ class OSDownloader(
             norm_path=False
         )
 
-        filtered_files = self._advanced_filename_filter(
+        filtered_files = self.filehandler._advanced_filename_filter(
             filenames=filtered_files,
             patterns=additional_patterns,
             variables=variables
@@ -290,5 +301,5 @@ class OSDownloader(
 
         :return: None
         """
-        self._delete_files_safely(self.downloaded_files, "downloaded file")
-        self._cleanup_empty_dirs(self.files_path)
+        self.filehandler._delete_files_safely(self.downloaded_files, "downloaded file")
+        self.filehandler._cleanup_empty_dirs(self.files_path)

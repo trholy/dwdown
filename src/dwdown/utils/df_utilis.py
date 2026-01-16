@@ -5,11 +5,12 @@ import pandas as pd
 
 
 class DataFrameOperator:
-    def __init__(self):
+    def __init__(self, logger: logging.Logger):
         """
         Initializes the DataFrameOperator.
-
+        :param logger: Logger instance.
         """
+        self.logger = logger
 
     def _validate_columns_exist(
             self,
@@ -36,7 +37,7 @@ class DataFrameOperator:
 
         missing_columns = mapped_columns - set(df.columns)
         if missing_columns:
-            self._logger.warning(
+            self.logger.warning(
                 f"Missing required columns in DataFrame: {missing_columns}."
             )
             return False
@@ -153,14 +154,14 @@ class DataFrameOperator:
         common_columns = columns_in_df1 & columns_in_df2 & merge_on
 
         if not common_columns:
-            self._logger.warning(
+            self.logger.warning(
                 "No common columns found for merging on %s. "
                 "Returning 'df1' unchanged.", merge_on
             )
             return df1
 
         # Log the merge operation details
-        self._logger.info(
+        self.logger.info(
             "Merging dataframes on columns: %s using method: %s",
             common_columns, join_method
         )
@@ -170,7 +171,7 @@ class DataFrameOperator:
                 df2, on=list(common_columns), how=join_method
             )
         except Exception as e:
-            self._logger.error(
+            self.logger.error(
                 "Error merging dataframes on columns: %s using method: %s. "
                 "Returning 'df1' unchanged. Error: %s",
                 common_columns, join_method, e
@@ -178,7 +179,7 @@ class DataFrameOperator:
             return df1
 
         # Log the result of the merge
-        self._logger.info("Merged dataframe shape: %s", merged_df.shape)
+        self.logger.info("Merged dataframe shape: %s", merged_df.shape)
 
         return merged_df
 
@@ -214,11 +215,11 @@ class DataFrameOperator:
         try:
             return pd.read_csv(csv_file, sep=sep, index_col=index_col)
         except FileNotFoundError:
-            self._logger.error(f"File not found: {csv_file}", exc_info=True)
+            self.logger.error(f"File not found: {csv_file}", exc_info=True)
         except pd.errors.EmptyDataError:
-            self._logger.error(f"File is empty: {csv_file}", exc_info=True)
+            self.logger.error(f"File is empty: {csv_file}", exc_info=True)
         except Exception as e:
-            self._logger.error(
+            self.logger.error(
                 f"Error reading file {csv_file}: {e}", exc_info=True)
         return None
 
@@ -237,6 +238,6 @@ class DataFrameOperator:
         """
         try:
             df.to_csv(file_path, index=index)
-            self._logger.info(f"Saved CSV file: {os.path.basename(file_path)}")
+            self.logger.info(f"Saved CSV file: {os.path.basename(file_path)}")
         except Exception as e:
-            self._logger.error(f"Error saving CSV file: {e}")
+            self.logger.error(f"Error saving CSV file: {e}")

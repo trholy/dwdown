@@ -4,6 +4,8 @@ import os.path
 from minio import Minio
 from minio.error import S3Error
 
+from dwdown.utils.file_handling import FileHandler
+
 
 class OSHandler:
     """
@@ -15,10 +17,21 @@ class OSHandler:
         logger (logging.Logger): Logger for logging messages.
     """
 
-    def __init__(self):
+    def __init__(
+            self,
+            logger: logging.Logger,
+            client: Minio,
+            filehandler: FileHandler
+    ):
         """
         Initializes the OSHandler with a MinIO client and a logger.
+        :param logger: Logger instance.
+        :param client: Minio client instance.
+        :param filehandler: FileHandler instance.
         """
+        self.logger = logger
+        self.client = client
+        self.filehandler = filehandler
 
     def _ensure_bucket(
         self,
@@ -31,15 +44,15 @@ class OSHandler:
         :param bucket_name: The name of the bucket to ensure.
         :param create_if_not_exists: Whether to create the bucket if it does not exist.
         """
-        if not self._client.bucket_exists(bucket_name):
+        if not self.client.bucket_exists(bucket_name):
             if create_if_not_exists:
-                self._client.make_bucket(bucket_name)
-                self._logger.info(f"Created bucket {bucket_name}")
+                self.client.make_bucket(bucket_name)
+                self.logger.info(f"Created bucket {bucket_name}")
             else:
-                self._logger.info(
+                self.logger.info(
                     f"Bucket {bucket_name} does not exist and will not be created")
         else:
-            self._logger.info(f"Bucket {bucket_name} exists")
+            self.logger.info(f"Bucket {bucket_name} exists")
 
     def _fetch_existing_files(
             self,
@@ -61,7 +74,7 @@ class OSHandler:
         existing_files = {}
 
         try:
-            objects = self._client.list_objects(
+            objects = self.client.list_objects(
                 bucket_name,
                 prefix=remote_prefix,
                 recursive=True)
@@ -73,7 +86,7 @@ class OSHandler:
                 existing_files[obj_name] = obj_stat.etag  # Store remote path and its hash
 
         except S3Error as e:
-            self._logger.error(f"Failed to fetch existing files: {e}")
+            self.logger.error(f"Failed to fetch existing files: {e}")
             raise
 
         return existing_files
@@ -98,14 +111,14 @@ class OSHandler:
         """
         try:
             if local_md5 is None:
-                local_md5 = self._calculate_md5(local_file_path)
+                local_md5 = self.filehandler._calculate_md5(local_file_path)
             if remote_hash is None:
-                obj_stat = self._client.stat_object(bucket_name, remote_path)
+                obj_stat = self.client.stat_object(bucket_name, remote_path)
                 remote_hash = obj_stat.etag
             return remote_hash == local_md5
 
         except Exception as e:
-            self._logger.error(
+            self.logger.error(
                 f"Error verifying file integrity for {remote_path}: {e}"
             )
             return False

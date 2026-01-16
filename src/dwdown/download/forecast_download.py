@@ -8,19 +8,14 @@ from urllib.parse import urljoin, urlparse
 import requests
 from lxml import html
 
-from dwdown.utils import (
-    DateHandler,
-    FileHandler,
-    LogHandler,
-    SessionHandler,
-    TimeHandler,
-    Utilities,
-)
+from dwdown.utils.date_time_utilis import DateHandler, TimeHandler
+from dwdown.utils.file_handling import FileHandler
+from dwdown.utils.general_utilis import Utilities
+from dwdown.utils.log_handling import LogHandler
+from dwdown.utils.network_handling import SessionHandler
 
 
-class ForecastDownloader(
-    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, SessionHandler
-):
+class ForecastDownloader:
     def __init__(
             self,
             model: str | None = None,
@@ -77,23 +72,34 @@ class ForecastDownloader(
         self._xpath_files = xpath_files or "/html/body/pre//a/@href"
         self._xpath_meta_data = xpath_meta_data or "//pre/text()"
 
-        FileHandler.__init__(self)
-        self._ensure_directories_exist([self.files_path, self.log_files_path])
+        # Initialize Utilities
+        self.utilities = Utilities()
+        self.timehandler = TimeHandler()
+        self.datehandler = DateHandler()
 
-        LogHandler.__init__(self, self.log_files_path, True, True)
-        self._logger = self.get_logger()
+        # Initialize Logger
+        self.loghandler = LogHandler(
+            timehandler=self.timehandler,
+            log_file_path=self.log_files_path,
+            log_to_console=True,
+            log_to_file=True
+        )
+        self._logger = self.loghandler.get_logger()
 
-        TimeHandler.__init__(self)
-        DateHandler.__init__(self)
-        Utilities.__init__(self)
+        # Initialize FileHandler
+        self.filehandler = FileHandler(
+            logger=self._logger,
+            utilities=self.utilities
+        )
+        self.filehandler._ensure_directories_exist([self.files_path, self.log_files_path])
 
-        SessionHandler.__init__(
-            self,
+        # Initialize Session
+        self.sessionhandler = SessionHandler(
             num_retries=5,
             backoff_factor=2,
             status_forcelist=(429, 500, 502, 503, 504)
         )
-        self._session = self.get_session()
+        self._session = self.sessionhandler.get_session()
 
         self._base_url = base_url or "https://opendata.dwd.de/weather/nwp"
         if url:
@@ -166,12 +172,12 @@ class ForecastDownloader(
         tree = html.fromstring(response.content)
         raw_meta_data = tree.xpath(self._xpath_meta_data)
 
-        fixed_dates = self._fix_date_format(raw_meta_data)
+        fixed_dates = self.datehandler._fix_date_format(raw_meta_data)
         cleaned_dates = [
             re.sub(r'\s+', '', date.replace(' -', ''))
             for date in fixed_dates]
 
-        parsed_dates = self._parse_dates(cleaned_dates, date_pattern)
+        parsed_dates = self.datehandler._parse_dates(cleaned_dates, date_pattern, self._logger)
 
         return min(parsed_dates), max(parsed_dates)
 
@@ -226,8 +232,8 @@ class ForecastDownloader(
         prefix = prefix or self.model
         suffix = suffix or ".grib2.bz2"
 
-        include_pattern = self._string_to_list(include_pattern)
-        exclude_pattern = self._string_to_list(exclude_pattern)
+        include_pattern = self.utilities._string_to_list(include_pattern)
+        exclude_pattern = self.utilities._string_to_list(exclude_pattern)
 
         include_pattern += self._set_grid_filter(self.grid)
 
@@ -235,12 +241,12 @@ class ForecastDownloader(
         if not filenames:
             return []
 
-        timesteps = self._process_timesteps(
+        timesteps = self.datehandler._process_timesteps(
             min_timestep=min_timestep,
             max_timestep=max_timestep
         )
 
-        filtered_filenames = self._simple_filename_filter(
+        filtered_filenames = self.filehandler._simple_filename_filter(
             filenames=filenames,
             prefix=prefix,
             suffix=suffix,
@@ -254,11 +260,12 @@ class ForecastDownloader(
             urljoin(self.url, file) for file in filtered_filenames
         ]
 
-        filtered_filenames = self._advanced_filename_filter(
+        # Use static method from FileHandler (class or instance is fine for static)
+        filtered_filenames = self.filehandler._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
             variables=self.variable if self.variable is None
-            else self._string_to_list(self.variable)
+            else self.utilities._string_to_list(self.variable)
         )
 
         self.download_links = filtered_filenames
@@ -289,7 +296,7 @@ class ForecastDownloader(
                     self.files_path, self.forecast_run, self.variable
                 )
                 downloaded_file_path = os.path.join(files_path, filename)
-                self._ensure_directory_exists(files_path)
+                self.filehandler._ensure_directory_exists(files_path)
             else:
                 downloaded_file_path = os.path.join(self.files_path, filename)
             downloaded_file_path = os.path.normpath(downloaded_file_path)
@@ -394,10 +401,10 @@ class ForecastDownloader(
 
         variable = self._get_variable_from_link(self.url)
 
-        self._write_log_file(
+        self.loghandler._write_log_file(
             self.downloaded_files, "downloaded_files", variable
         )
-        self._write_log_file(
+        self.loghandler._write_log_file(
             self.failed_files, "failed_files", variable
         )
 
@@ -407,7 +414,7 @@ class ForecastDownloader(
 
         :return: None
         """
-        self._delete_files_safely(
+        self.filehandler._delete_files_safely(
             self._downloaded_files_paths, "downloaded file"
         )
-        self._cleanup_empty_dirs(self.files_path)
+        self.filehandler._cleanup_empty_dirs(self.files_path)
