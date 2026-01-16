@@ -3,8 +3,9 @@ import os
 import re
 from datetime import datetime
 
+from .date_time_utilis import TimeHandler
 
-class LogHandler:
+class LogHandler(TimeHandler):
     """
     A class to handle logging for other classes.
 
@@ -33,6 +34,8 @@ class LogHandler:
         self._log_to_file = log_to_file
 
         self._logger = self._setup_logger()
+
+        TimeHandler.__init__(self)
 
     def _setup_logger(self) -> logging.Logger:
         """
