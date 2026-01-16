@@ -106,5 +106,6 @@ class OSHandler:
 
         except Exception as e:
             self._logger.error(
-                f"Error verifying file integrity for {remote_path}: {e}")
+                f"Error verifying file integrity for {remote_path}: {e}"
+            )
             return False

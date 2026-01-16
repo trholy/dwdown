@@ -10,12 +10,14 @@ from ..utils import (
     LogHandler,
     OSHandler,
     TimeHandler,
-    Utilities,
+    Utilities
 )
 
 
 class OSUploader(
-    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, ClientHandler, OSHandler):
+    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, ClientHandler,
+    OSHandler
+):
     def __init__(
             self,
             endpoint: str,
@@ -65,11 +67,13 @@ class OSUploader(
         Utilities.__init__(self)
         TimeHandler.__init__(self)
         DateHandler.__init__(self)
-        ClientHandler.__init__(self,
+        ClientHandler.__init__(
+            self,
             endpoint=self._endpoint,
             access_key=self._access_key,
             secret_key=self._secret_key,
-            secure=self._secure)
+            secure=self._secure
+        )
         self._client = self.get_client()
 
         OSHandler.__init__(self)
@@ -99,9 +103,11 @@ class OSUploader(
             if (os.path.basename(local_file_path) in existing_remote_files_with_hashes.keys()
                     and self._verify_file_integrity(
                         local_file_path, None, self.bucket_name,
-                        existing_remote_files_with_hashes[os.path.basename(local_file_path)], local_hash)):
+                        existing_remote_files_with_hashes[os.path.basename(local_file_path)], local_hash)
+            ):
                 self._logger.info(
-                    f"Skipping already uploaded file: {os.path.basename(local_file_path)}")
+                    f"Skipping already uploaded file: {os.path.basename(local_file_path)}"
+                )
                 continue
 
             relative_path = os.path.relpath(local_file_path, self.files_path)
@@ -130,7 +136,8 @@ class OSUploader(
                 time.sleep(self._delay)
 
             self._client.fput_object(
-                self.bucket_name, remote_path, local_file_path)
+                self.bucket_name, remote_path, local_file_path
+            )
 
             obj_stat = self._client.stat_object(self.bucket_name, remote_path)
             if obj_stat.etag == local_md5:
@@ -138,7 +145,8 @@ class OSUploader(
                 return True
             else:
                 self._logger.warning(
-                    f"Hash mismatch: {local_file_path} (possible corruption).")
+                    f"Hash mismatch: {local_file_path} (possible corruption)."
+                )
                 self.corrupted_files.append(local_file_path)
                 return False
 
@@ -191,7 +199,8 @@ class OSUploader(
         self._ensure_bucket(self.bucket_name, True)
         if check_for_existence:
             existing_remote_files_with_hashes = self._fetch_existing_files(
-                self.bucket_name, remote_prefix, True)
+                self.bucket_name, remote_prefix, True
+            )
         else:
             existing_remote_files_with_hashes = {}
 
@@ -200,7 +209,8 @@ class OSUploader(
 
         timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep)
+            max_timestep=max_timestep
+        )
 
         filtered_filenames = self._simple_filename_filter(
             filenames=filenames,
@@ -209,12 +219,14 @@ class OSUploader(
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
             skip_time_step_filtering_variables=skip_time_step_filtering_variables,
-            timesteps=timesteps)
+            timesteps=timesteps
+        )
 
         filtered_filenames = self._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
-            variables=variables)
+            variables=variables
+        )
 
         local_files_with_hashes = {}
         for obj in filtered_filenames:
@@ -223,13 +235,16 @@ class OSUploader(
         files_to_upload = self._build_upload_list(
             local_files_with_hashes,
             remote_prefix,
-            existing_remote_files_with_hashes)
+            existing_remote_files_with_hashes
+        )
 
         # Step 3: Parallel Upload with Real-time Logging
         with ThreadPoolExecutor(max_workers=self._n_jobs) as executor:
-            futures = {executor.submit(
-                self._upload_file, local, remote, local_md5): (local, remote)
-                       for local, remote, local_md5 in files_to_upload}
+            futures = {
+                executor.submit(
+                    self._upload_file, local, remote, local_md5): (local, remote)
+                for local, remote, local_md5 in files_to_upload
+            }
 
             for future in as_completed(futures):
                 local_file_path, remote_path = futures[future]
@@ -240,7 +255,8 @@ class OSUploader(
                         self.corrupted_files.append(local_file_path)
                 except Exception as e:
                     self._logger.error(
-                        f"Error uploading {local_file_path}: {e}")
+                        f"Error uploading {local_file_path}: {e}"
+                    )
 
         self._log_summary()
 

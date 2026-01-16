@@ -4,10 +4,17 @@ import pandas as pd
 
 from ..data import MappingStore
 from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Utilities
+    DataFrameOperator,
+    DateHandler,
+    FileHandler,
+    LogHandler,
+    Utilities
+)
 
 
 class DataMerger(
-    Utilities, LogHandler, FileHandler, DateHandler, DataFrameOperator, MappingStore):
+    Utilities, LogHandler, FileHandler, DateHandler, DataFrameOperator, MappingStore
+):
     def __init__(
             self,
             files_path: str,
@@ -47,7 +54,8 @@ class DataMerger(
         MappingStore.__init__(self)
 
         self._required_columns = required_columns or {
-            'latitude', 'longitude', 'valid_time'}
+            'latitude', 'longitude', 'valid_time'
+        }
         self._join_method = join_method or 'outer'
         self._index_col = index_col
         self._sep = sep
@@ -80,20 +88,23 @@ class DataMerger(
          is not allowed.
         """
         columns_exist = self._validate_columns_exist(
-            df, self._required_columns, variable_mapped, self._mapping_dict)
+            df, self._required_columns, variable_mapped, self._mapping_dict
+        )
 
         if not columns_exist and not skip_variable_validation:
             self._logger.warning(f"Skipping variable: {variable_mapped}.")
             return None
 
         df['valid_time'] = self._parse_datetime(
-            df['valid_time'], 'valid_time')
+            df['valid_time'], 'valid_time'
+        )
 
         if not columns_exist and skip_variable_validation:
             variable_df_name = df.columns[-1]
             self._logger.warning(
                 f"Variable validation is skipped."
-                f" Using variable: {variable_df_name} from DataFrame.")
+                f" Using variable: {variable_df_name} from DataFrame."
+            )
             variable_name = f"{variable_df_name}_{additional_pattern}"\
                 if additional_pattern else variable_df_name
         else:
@@ -139,9 +150,11 @@ class DataMerger(
         variables_mapped = self._variable_mapping(variables, self.mapping_dict)
 
         skip_time_step_filtering_variables = self._string_to_list(
-            skip_time_step_filtering_variables)
+            skip_time_step_filtering_variables
+        )
         skip_time_step_filtering_variables_mapped = self._variable_mapping(
-            skip_time_step_filtering_variables, self.mapping_dict)
+            skip_time_step_filtering_variables, self.mapping_dict
+        )
 
         for variable, variable_mapped in zip(variables, variables_mapped, strict=False):
             variable_files_path = os.path.join(self.files_path, variable)
@@ -151,7 +164,8 @@ class DataMerger(
             if variable_mapped not in skip_time_step_filtering_variables_mapped:
                 timesteps = self._process_timesteps(
                     min_timestep=time_step,
-                    max_timestep=time_step)
+                    max_timestep=time_step
+                )
             else:
                 timesteps = []
 
@@ -162,16 +176,19 @@ class DataMerger(
                 include_pattern=include_pattern,
                 exclude_pattern=exclude_pattern,
                 skip_time_step_filtering_variables=skip_time_step_filtering_variables,
-                timesteps=timesteps)
+                timesteps=timesteps
+            )
 
             selected_files = self._match_filenames_by_patterns(
                 filenames=filtered_files,
-                variable=variable)
+                variable=variable
+            )
 
             if not selected_files:
                 self._logger.warning(
                     f"No matching file found for variable: {variable}."
-                    f" Skipping.")
+                    f" Skipping."
+                )
                 continue
 
             selected_files = self._string_to_list(selected_files)
@@ -187,7 +204,8 @@ class DataMerger(
                     continue
 
                 filtered_df = self._process_dataframe(
-                    df, variable_mapped, additional_pattern, skip_variable_validation)
+                    df, variable_mapped, additional_pattern, skip_variable_validation
+                )
 
                 if filtered_df is not None:
                     dataframe_list.append(filtered_df)
@@ -201,7 +219,8 @@ class DataMerger(
             self._logger.info(
                 f"Dataframes have different lengths ranging from "
                 f"{min(df_column_len)} to {max(df_column_len)}. "
-                f"Keep effects of 'join_method' = {self._join_method} in mind!")
+                f"Keep effects of 'join_method' = {self._join_method} in mind!"
+            )
 
         merged_df = dataframe_list[0]
         for df in dataframe_list[1:]:
@@ -209,7 +228,8 @@ class DataMerger(
                 merged_df,
                 df,
                 self._required_columns,
-                self._join_method)
+                self._join_method
+            )
 
         arranged_df = self._arrange_df(merged_df)
 
@@ -251,19 +271,22 @@ class DataMerger(
                 self._logger.error(
                     f"Expected additional pattern(s) {missing_patterns}"
                     f" for variable '{variable}', "
-                    f"but none were found in available filenames!")
+                    f"but none were found in available filenames!"
+                )
 
         if detected_patterns and expected_patterns and not matching_files:
             self._logger.warning(
                 f"Detected additional pattern(s) {detected_patterns}"
                 f" for '{variable}', but no matching selection provided."
-                f" Skipping.")
+                f" Skipping."
+            )
             return None
 
         if not matching_files:
             self._logger.warning(
                 f"No valid file found for variable:"
-                f" {variable} with required pattern.")
+                f" {variable} with required pattern."
+            )
             return None
 
         return matching_files

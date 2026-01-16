@@ -29,14 +29,16 @@ class DataFrameOperator:
         :return: True if all required columns exist, False otherwise.
         """
         mapped_columns = {
-            mapping_dictionary.get(col, col) for col in required_columns}
+            mapping_dictionary.get(col, col) for col in required_columns
+        }
         mapped_variable = mapping_dictionary.get(variable, variable)
         mapped_columns.add(mapped_variable)
 
         missing_columns = mapped_columns - set(df.columns)
         if missing_columns:
             self._logger.warning(
-                f"Missing required columns in DataFrame: {missing_columns}.")
+                f"Missing required columns in DataFrame: {missing_columns}."
+            )
             return False
         return True
 
@@ -75,7 +77,8 @@ class DataFrameOperator:
             if invalid_dates > 0:
                 logging.warning(
                     f"{invalid_dates} invalid '{column}'"
-                    f" entries were coerced to NaT.")
+                    f" entries were coerced to NaT."
+                )
         except ValueError as e:
             logging.error(f"ValueError while parsing '{column}': {e}")
             parsed_series = series  # Return the original series if parsing fails
@@ -106,12 +109,14 @@ class DataFrameOperator:
         if None in (start_lat, end_lat, start_lon, end_lon):
             logging.warning(
                 "Geographic filtering is enabled but no valid coordinates"
-                " provided. Skipping filter.")
+                " provided. Skipping filter."
+            )
             return df
 
         filtered_df = df[
             (df['latitude'].between(start_lat, end_lat)) &
-            (df['longitude'].between(start_lon, end_lon))]
+            (df['longitude'].between(start_lon, end_lon))
+        ]
 
         return filtered_df
 
@@ -150,27 +155,30 @@ class DataFrameOperator:
         if not common_columns:
             self._logger.warning(
                 "No common columns found for merging on %s. "
-                "Returning 'df1' unchanged.", merge_on)
+                "Returning 'df1' unchanged.", merge_on
+            )
             return df1
 
         # Log the merge operation details
         self._logger.info(
             "Merging dataframes on columns: %s using method: %s",
-            common_columns, join_method)
+            common_columns, join_method
+        )
 
         try:
             merged_df = df1.merge(
-                df2, on=list(common_columns), how=join_method)
+                df2, on=list(common_columns), how=join_method
+            )
         except Exception as e:
             self._logger.error(
                 "Error merging dataframes on columns: %s using method: %s. "
                 "Returning 'df1' unchanged. Error: %s",
-                common_columns, join_method, e)
+                common_columns, join_method, e
+            )
             return df1
 
         # Log the result of the merge
-        self._logger.info(
-            "Merged dataframe shape: %s", merged_df.shape)
+        self._logger.info("Merged dataframe shape: %s", merged_df.shape)
 
         return merged_df
 

@@ -102,13 +102,15 @@ class FileHandler:
                and filename.endswith(suffix)
                and all(pattern in filename for pattern in include_pattern)
                and any(ts in filename for ts in timesteps)
-               and not any(pattern in filename for pattern in exclude_pattern)]
+               and not any(pattern in filename for pattern in exclude_pattern)
+        ]
 
         if skip_time_step_filtering_variables:
             target_vars = set(v.lower() for v in skip_time_step_filtering_variables)
             filtered_filenames.extend(
                 filename for filename in filenames
-                if os.path.basename(os.path.dirname(filename)).lower() in target_vars)
+                if os.path.basename(os.path.dirname(filename)).lower() in target_vars
+            )
 
         return filtered_filenames
 

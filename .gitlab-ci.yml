@@ -1,14 +1,11 @@
 image: python:3.10
 
-
 stages:
   - test
   - deploy
 
-
 variables:
   PYTHONPATH: "${PYTHONPATH}:${CI_PROJECT_DIR}"
-
 
 test:
   stage: test

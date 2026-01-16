@@ -1,5 +1,3 @@
-
-
 class MappingStore:
     def __init__(self):
         """

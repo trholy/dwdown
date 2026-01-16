@@ -65,19 +65,21 @@ class Notifier(Utilities):
 
         if not full_message.strip():
             self._logger.warning(
-                "No valid message content to send. Skipping notification.")
+                "No valid message content to send. Skipping notification."
+            )
             return
 
         payload = {
             "title": title or "Script Status",
             "message": full_message,
-            "priority": priority or self.priority,
+            "priority": priority or self.priority
         }
         headers = {"X-Gotify-Key": self.token}
 
         try:
             response = requests.post(
-                self.server_url, json=payload, headers=headers)
+                self.server_url, json=payload, headers=headers
+            )
             response.raise_for_status()
 
             self._logger.info("Notification sent successfully!")
@@ -134,7 +136,8 @@ class Notifier(Utilities):
                 msg_list.insert(0, script_name)
             return "\n".join(msg_list)
         self._logger.error(
-            "Invalid message format. Expected str, list, or dict.")
+            "Invalid message format. Expected str, list, or dict."
+        )
         return ""
 
     @staticmethod

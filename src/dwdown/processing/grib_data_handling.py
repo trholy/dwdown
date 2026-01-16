@@ -9,7 +9,8 @@ from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Uti
 
 
 class GribFileManager(
-    Utilities, LogHandler, FileHandler, DateHandler, DataFrameOperator):
+    Utilities, LogHandler, FileHandler, DateHandler, DataFrameOperator
+):
     def __init__(
             self,
             files_path: str,
@@ -28,9 +29,11 @@ class GribFileManager(
         """
         self.files_path = os.path.normpath(files_path or "download_files")
         self.extracted_files_path = os.path.normpath(
-            extracted_files_path or "extracted_files")
+            extracted_files_path or "extracted_files"
+        )
         self.converted_files_path = os.path.normpath(
-            converted_files_path or "converted_files")
+            converted_files_path or "converted_files"
+        )
         self.log_files_path = os.path.normpath(log_files_path or "log_files")
 
         Utilities.__init__(self)
@@ -38,7 +41,8 @@ class GribFileManager(
         FileHandler.__init__(self)
         self._ensure_directories_exist([
             self.files_path, self.extracted_files_path,
-            self.converted_files_path, self.log_files_path])
+            self.converted_files_path, self.log_files_path
+        ])
 
         LogHandler.__init__(self, self.log_files_path, True, True)
         self._logger = self.get_logger()
@@ -60,7 +64,8 @@ class GribFileManager(
         """
         decompressed_file_path = file_path.replace('.bz2', '')
         decompressed_file_path = decompressed_file_path.replace(
-            self.files_path, self.extracted_files_path)
+            self.files_path, self.extracted_files_path
+        )
         decompressed_file_path = os.path.normpath(decompressed_file_path)
 
         self._ensure_directory_exists(os.path.dirname(decompressed_file_path))
@@ -75,7 +80,8 @@ class GribFileManager(
         :return: Path to the converted file.
         """
         csv_file_path = file_path.replace(
-            self.extracted_files_path, self.converted_files_path)
+            self.extracted_files_path, self.converted_files_path
+        )
         csv_file_path = csv_file_path.replace('.grib2', '.csv')
         csv_file_path = os.path.normpath(csv_file_path)
 
@@ -98,20 +104,24 @@ class GribFileManager(
                     with open(decompressed_file_path, 'wb') as output_file:
                         shutil.copyfileobj(bz2_file, output_file)
                 self._logger.info(
-                    f"Decompressed file: {os.path.basename(decompressed_file_path)}")
+                    f"Decompressed file: {os.path.basename(decompressed_file_path)}"
+                )
             else:
                 self._logger.info(
                     f"File already exists: {decompressed_file_path},"
-                    f" skipping decompression.")
+                    f" skipping decompression."
+                )
             return decompressed_file_path
         except PermissionError as e:
             self._logger.error(
                 f"Permission error while decompressing"
-                f" file {file_path}: {e}")
+                f" file {file_path}: {e}"
+            )
             raise
         except Exception as e:
             self._logger.error(
-                f"Error decompressing file {file_path}: {e}")
+                f"Error decompressing file {file_path}: {e}"
+            )
             raise
 
     def _grib_to_df(
@@ -146,22 +156,26 @@ class GribFileManager(
                     if not required_columns.issubset(df.columns):
                         self._logger.error(
                             f"Missing required columns in GRIB file:"
-                            f" {required_columns - set(df.columns)}")
+                            f" {required_columns - set(df.columns)}"
+                        )
                         return
 
                     df = self._filter_by_coordinates(
                         df,
                         start_lat, end_lat,
-                        start_lon, end_lon)
+                        start_lon, end_lon
+                    )
                 self._save_as_csv(df, csv_file_path)
 
                 self.converted_files.append(csv_file_path)
             else:
                 self._logger.info(
-                    f"File already exists: {file_path}, skipping converting.")
+                    f"File already exists: {file_path}, skipping converting."
+                )
         except Exception as e:
             self._logger.error(
-                f"Error while processing GRIB file {file_path}: {e}")
+                f"Error while processing GRIB file {file_path}: {e}"
+            )
 
     def get_filenames(
             self,
@@ -192,7 +206,8 @@ class GribFileManager(
         """
         timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep)
+            max_timestep=max_timestep
+        )
 
         filenames = self._search_directory(self.files_path)
         filenames = self._flatten_list(filenames)
@@ -204,12 +219,14 @@ class GribFileManager(
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
             skip_time_step_filtering_variables=skip_time_step_filtering_variables,
-            timesteps=timesteps)
+            timesteps=timesteps
+        )
 
         filtered_files = self._advanced_filename_filter(
             filenames=filtered_files,
             patterns=additional_patterns,
-            variables=variables)
+            variables=variables
+        )
 
         return filtered_files
 
@@ -241,7 +258,8 @@ class GribFileManager(
         for idx, file in enumerate(file_names, start=1):
             try:
                 self._logger.info(
-                    f"[{idx}/{len(file_names)}] Processing {os.path.basename(file)}.")
+                    f"[{idx}/{len(file_names)}] Processing {os.path.basename(file)}."
+                )
                 decompressed_file_path = self._decompress_files(file)
 
                 self._grib_to_df(
@@ -250,19 +268,22 @@ class GribFileManager(
                     start_lat,
                     end_lat,
                     start_lon,
-                    end_lon)
+                    end_lon
+                )
 
                 self._logger.info(
-                    f"Successfully processed {os.path.basename(file)}.")
+                    f"Successfully processed {os.path.basename(file)}."
+                )
 
                 self.processed_download_files.append(file)
                 self.decompressed_files.extend(
-                    [decompressed_file_path] + glob.glob(
-                        f"{decompressed_file_path}.*.idx"))
+                    [decompressed_file_path] + glob.glob(f"{decompressed_file_path}.*.idx")
+                )
 
             except FileNotFoundError as e:
                 self._logger.error(
-                    f"File not found: {file}. Skipping. Error: {e}")
+                    f"File not found: {file}. Skipping. Error: {e}"
+                )
                 self.failed_files.append(file)
 
             except Exception as e:

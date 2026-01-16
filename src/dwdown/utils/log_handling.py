@@ -102,11 +102,14 @@ class LogHandler(TimeHandler):
         log_file_name = os.path.normpath(os.path.join(
             self._log_file_path,
             f"{self.__class__.__name__}_"
-            f"{variable_name}{file_category}_{formatted_time_stamp}.log"))
+            f"{variable_name}{file_category}_{formatted_time_stamp}.log")
+        )
 
         try:
             with open(log_file_name, "w", encoding="utf-8") as file:
                 file.write("\n".join(files) + "\n")
-            self._logger.info(f"Saved log: {log_file_name} ({len(files)} entries)")
+            self._logger.info(
+                f"Saved log: {log_file_name} ({len(files)} entries)"
+            )
         except Exception as e:
             self._logger.error(f"Error writing log file {log_file_name}: {e}")

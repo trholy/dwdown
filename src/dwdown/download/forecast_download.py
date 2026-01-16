@@ -14,12 +14,13 @@ from ..utils import (
     LogHandler,
     SessionHandler,
     TimeHandler,
-    Utilities,
+    Utilities
 )
 
 
 class ForecastDownloader(
-    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, SessionHandler):
+    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, SessionHandler
+):
     def __init__(
             self,
             model: str | None = None,
@@ -44,9 +45,8 @@ class ForecastDownloader(
          NOT needed and will be overwritten).
         :param base_url: Base URL to fetch data from (following four parameters
          are needed to build full URL).
-        :param model: The NWP model name, e.g. icon-d2, icon-eu, icon-eu-eps, ...
-        :param grid: The model grid [regular-lat-lon | rotated-lat-lon
-         | icosahedral].
+        :param model: The NWP model name, e.g. icon-d2, icon-eu, ...
+        :param grid: The model grid [regular-lat-lon | icosahedral].
         :param forecast_run: The forecast run in the 3-hourly assimilation
          cycle, e.g. 00, 03, 06, ..., 21.
         :param variable: The single-level model fields that should be
@@ -90,8 +90,9 @@ class ForecastDownloader(
         SessionHandler.__init__(
             self,
             num_retries=5,
-            backoff_factor=2.0,
-            status_forcelist=(429, 500, 502, 503, 504))
+            backoff_factor=2,
+            status_forcelist=(429, 500, 502, 503, 504)
+        )
         self._session = self.get_session()
 
         self._base_url = base_url or "https://opendata.dwd.de/weather/nwp"
@@ -236,7 +237,8 @@ class ForecastDownloader(
 
         timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep)
+            max_timestep=max_timestep
+        )
 
         filtered_filenames = self._simple_filename_filter(
             filenames=filenames,
@@ -245,15 +247,19 @@ class ForecastDownloader(
             include_pattern=include_pattern,
             exclude_pattern=exclude_pattern,
             skip_time_step_filtering_variables=skip_time_step_filtering_variables,
-            timesteps=timesteps)
+            timesteps=timesteps
+        )
 
-        filtered_filenames = [urljoin(self.url, file) for file in filtered_filenames]
+        filtered_filenames = [
+            urljoin(self.url, file) for file in filtered_filenames
+        ]
 
         filtered_filenames = self._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
             variables=self.variable if self.variable is None
-            else self._string_to_list(self.variable))
+            else self._string_to_list(self.variable)
+        )
 
         self.download_links = filtered_filenames
         self._raw_filenames = filenames
@@ -279,7 +285,9 @@ class ForecastDownloader(
             filename = os.path.basename(link)
 
             if all((self.forecast_run, self.variable)):
-                files_path = os.path.join(self.files_path, self.forecast_run, self.variable)
+                files_path = os.path.join(
+                    self.files_path, self.forecast_run, self.variable
+                )
                 downloaded_file_path = os.path.join(files_path, filename)
                 self._ensure_directory_exists(files_path)
             else:
@@ -296,7 +304,9 @@ class ForecastDownloader(
             if self._delay > 0:
                 time.sleep(self._delay)
 
-            response = self._session.get(link, stream=True, timeout=self._timeout)
+            response = self._session.get(
+                link, stream=True, timeout=self._timeout
+            )
             response.raise_for_status()  # Raise an error for bad responses
 
             # Download the file in chunks
@@ -342,10 +352,12 @@ class ForecastDownloader(
                     self.failed_files.append(link)
 
         self._logger.info(
-            f"Downloaded {len(self.downloaded_files)} files successfully.")
+            f"Downloaded {len(self.downloaded_files)} files successfully."
+        )
         if self.failed_files:
             self._logger.warning(
-                f"{len(self.failed_files)} downloads failed initially.")
+                f"{len(self.failed_files)} downloads failed initially."
+            )
 
         # Step 2: Retry Failed Downloads
         if self._retry > 0 and self.failed_files:
@@ -382,8 +394,12 @@ class ForecastDownloader(
 
         variable = self._get_variable_from_link(self.url)
 
-        self._write_log_file(self.downloaded_files, "downloaded_files", variable)
-        self._write_log_file(self.failed_files, "failed_files", variable)
+        self._write_log_file(
+            self.downloaded_files, "downloaded_files", variable
+        )
+        self._write_log_file(
+            self.failed_files, "failed_files", variable
+        )
 
     def delete(self) -> None:
         """
@@ -391,5 +407,7 @@ class ForecastDownloader(
 
         :return: None
         """
-        self._delete_files_safely(self._downloaded_files_paths, "downloaded file")
+        self._delete_files_safely(
+            self._downloaded_files_paths, "downloaded file"
+        )
         self._cleanup_empty_dirs(self.files_path)

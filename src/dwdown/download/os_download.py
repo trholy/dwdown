@@ -9,12 +9,14 @@ from ..utils import (
     LogHandler,
     OSHandler,
     TimeHandler,
-    Utilities,
+    Utilities
 )
 
 
 class OSDownloader(
-    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, ClientHandler, OSHandler):
+    Utilities, LogHandler, FileHandler, TimeHandler, DateHandler, ClientHandler,
+    OSHandler
+):
     def __init__(
             self,
             endpoint: str,
@@ -63,11 +65,13 @@ class OSDownloader(
 
         TimeHandler.__init__(self)
         DateHandler.__init__(self)
-        ClientHandler.__init__(self,
+        ClientHandler.__init__(
+            self,
             endpoint=self._endpoint,
             access_key=self._access_key,
             secret_key=self._secret_key,
-            secure=self._secure)
+            secure=self._secure
+        )
         self._client = self.get_client()
 
         OSHandler.__init__(self)
@@ -98,9 +102,11 @@ class OSDownloader(
 
             # Skip if the file already exists and matches hash
             if os.path.exists(local_file_path) and self._verify_file_integrity(
-                    local_file_path, remote_path, self.bucket_name, remote_hash):
+                    local_file_path, remote_path, self.bucket_name, remote_hash
+            ):
                 self._logger.info(
-                    f"Skipping already downloaded file: {remote_path}")
+                    f"Skipping already downloaded file: {remote_path}"
+                )
                 continue
 
             files_to_download.append((local_file_path, remote_path, remote_hash))
@@ -131,22 +137,26 @@ class OSDownloader(
             if check_for_existence and os.path.exists(local_file_path):
                 if self._verify_file_integrity(
                         local_file_path, remote_path,
-                        self.bucket_name, remote_hash):
+                        self.bucket_name, remote_hash
+                ):
                     self._logger.info(
                         f"Skipping already downloaded file: {remote_path}")
                     return True
 
             self._client.fget_object(
-                self.bucket_name, remote_path, local_file_path)
+                self.bucket_name, remote_path, local_file_path
+            )
 
             # Verify integrity after download
             if self._verify_file_integrity(
-                local_file_path, remote_path, self.bucket_name, remote_hash):
+                local_file_path, remote_path, self.bucket_name, remote_hash
+            ):
                 self._logger.info(f"Successfully downloaded: {remote_path}")
                 return True
             else:
                 self._logger.warning(
-                    f"Hash mismatch: {remote_path} (possible corruption).")
+                    f"Hash mismatch: {remote_path} (possible corruption)."
+                )
                 self.corrupted_files.append(remote_path)
                 return False
 
@@ -160,10 +170,12 @@ class OSDownloader(
         Logs the summary of the download process.
         """
         self._logger.info(
-            f"Downloaded {len(self.downloaded_files)} files successfully.")
+            f"Downloaded {len(self.downloaded_files)} files successfully."
+        )
         if self.corrupted_files:
             self._logger.warning(
-                f"{len(self.corrupted_files)} files may be corrupted.")
+                f"{len(self.corrupted_files)} files may be corrupted."
+            )
 
         self._write_log_file(self.downloaded_files, "downloaded_files")
         self._write_log_file(self.corrupted_files, "corrupted_files")
@@ -198,14 +210,16 @@ class OSDownloader(
         """
         self._ensure_bucket(self.bucket_name)
         remote_files_with_hashes = self._fetch_existing_files(
-            self.bucket_name, remote_prefix)
+            self.bucket_name, remote_prefix
+        )
 
         include_pattern = self._string_to_list(include_pattern)
         exclude_pattern = self._string_to_list(exclude_pattern)
 
         timesteps = self._process_timesteps(
             min_timestep=min_timestep,
-            max_timestep=max_timestep)
+            max_timestep=max_timestep
+        )
 
         filtered_files = self._simple_filename_filter(
             filenames=list(remote_files_with_hashes.keys()),
@@ -215,26 +229,31 @@ class OSDownloader(
             exclude_pattern=exclude_pattern,
             skip_time_step_filtering_variables=skip_time_step_filtering_variables,
             timesteps=timesteps,
-            norm_path=False)
+            norm_path=False
+        )
 
         filtered_files = self._advanced_filename_filter(
             filenames=filtered_files,
             patterns=additional_patterns,
-            variables=variables)
+            variables=variables
+        )
 
         # Filter the remote files with hashes
         filtered_remote_files_with_hashes = {
             k: v for k, v in remote_files_with_hashes.items()
-            if k in filtered_files}
+            if k in filtered_files
+        }
 
         if not filtered_remote_files_with_hashes:
             self._logger.info(
                 f"No files to download from bucket '{self.bucket_name}'"
-                f" with prefix '{remote_prefix}'.")
+                f" with prefix '{remote_prefix}'."
+            )
             return  # Exit early if no files
 
         files_to_download = self._build_download_list(
-            filtered_remote_files_with_hashes)
+            filtered_remote_files_with_hashes
+        )
 
         if not files_to_download:
             self._logger.info("All files are already downloaded and verified.")
@@ -245,10 +264,12 @@ class OSDownloader(
 
         # Parallel Download with Real-time Logging
         with ThreadPoolExecutor(max_workers=self._n_jobs) as executor:
-            futures = {executor.submit(
-                self._download_file, local, remote,
-                check_for_existence, remote_hash): (local, remote)
-                       for local, remote, remote_hash in files_to_download}
+            futures = {
+                executor.submit(
+                    self._download_file, local, remote,
+                    check_for_existence, remote_hash): (local, remote)
+                for local, remote, remote_hash in files_to_download
+            }
 
             for future in as_completed(futures):
                 local_file_path, remote_path = futures[future]
