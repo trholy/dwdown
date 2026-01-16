@@ -62,7 +62,7 @@ class FileHandler:
                 # Extend the list with results from subdirectories
                 filenames.append(self._search_directory(entry.path))
 
-        return filenames
+        return self._flatten_list(filenames)
 
     def _simple_filename_filter(
             self,
