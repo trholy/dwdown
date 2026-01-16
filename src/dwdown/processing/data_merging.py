@@ -2,8 +2,8 @@ import os
 
 import pandas as pd
 
-from ..data import MappingStore
-from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Utilities
+from dwdown.data import MappingStore
+from dwdown.utils import (
     DataFrameOperator,
     DateHandler,
     FileHandler,
