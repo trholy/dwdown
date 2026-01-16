@@ -68,6 +68,11 @@ class LogHandler:
         time_stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         if self._log_to_file:
             log_file_name = f"{self.__class__.__name__}_{time_stamp}.log"
+            
+            # Ensure directory exists before creating file handler
+            if not os.path.exists(self._log_file_path):
+                os.makedirs(self._log_file_path, exist_ok=True)
+                
             log_file_path = os.path.join(self._log_file_path, log_file_name)
 
             try:
