@@ -1,7 +1,23 @@
-image: python:3.9
+image: python:3.10
+
 
 stages:
+  - test
   - deploy
+
+
+variables:
+  PYTHONPATH: "${PYTHONPATH}:${CI_PROJECT_DIR}"
+
+
+test:
+  stage: test
+  script:
+    - pip install .
+    - pip install pytest
+    - pytest
+  only:
+    - main
 
 pages:
   stage: deploy
