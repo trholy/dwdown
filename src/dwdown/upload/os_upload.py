@@ -3,7 +3,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urljoin
 
-from ..utils import (
+from dwdown.utils import (
     ClientHandler,
     DateHandler,
     FileHandler,

@@ -2,7 +2,7 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ..utils import (
+from dwdown.utils import (
     ClientHandler,
     DateHandler,
     FileHandler,

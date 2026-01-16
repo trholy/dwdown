@@ -3,7 +3,7 @@ from urllib.parse import urlparse, urlunparse
 
 import requests
 
-from ..utils import Utilities
+from dwdown.utils import Utilities
 
 
 class Notifier(Utilities):

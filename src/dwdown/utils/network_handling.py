@@ -17,7 +17,7 @@ class SessionHandler:
     def __init__(
         self,
         num_retries: int = 5,
-        backoff_factor: int | float = 2.0,
+        backoff_factor: int | float = 2,
         status_forcelist: tuple | None = None
     ):
         """
@@ -44,7 +44,8 @@ class SessionHandler:
             retry_strategy = Retry(
                 total=self._num_retries,
                 backoff_factor=self._backoff_factor,
-                status_forcelist=self._status_forcelist)
+                status_forcelist=self._status_forcelist
+            )
 
             adapter = HTTPAdapter(max_retries=retry_strategy)
             session = Session()
@@ -79,7 +80,7 @@ class ClientHandler:
         endpoint: str,
         access_key: str,
         secret_key: str,
-        secure: bool = True,
+        secure: bool = True
     ):
         """
         Initializes the ClientHandler with MinIO configuration.

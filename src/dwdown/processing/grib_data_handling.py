@@ -5,7 +5,13 @@ import shutil
 
 import xarray as xr
 
-from ..utils import DataFrameOperator, DateHandler, FileHandler, LogHandler, Utilities
+from dwdown.utils import (
+    DataFrameOperator,
+    DateHandler,
+    FileHandler,
+    LogHandler,
+    Utilities
+)
 
 
 class GribFileManager(

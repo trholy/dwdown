@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 from lxml import html
 
-from ..utils import (
+from dwdown.utils import (
     DateHandler,
     FileHandler,
     LogHandler,
