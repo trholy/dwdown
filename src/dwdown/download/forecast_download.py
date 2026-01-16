@@ -14,7 +14,7 @@ from dwdown.utils import (
     LogHandler,
     SessionHandler,
     TimeHandler,
-    Utilities
+    Utilities,
 )
 
 

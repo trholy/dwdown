@@ -9,7 +9,7 @@ from dwdown.utils import (
     LogHandler,
     OSHandler,
     TimeHandler,
-    Utilities
+    Utilities,
 )
 
 
@@ -272,7 +272,7 @@ class OSDownloader(
             }
 
             for future in as_completed(futures):
-                local_file_path, remote_path = futures[future]
+                _local_file_path, remote_path = futures[future]
                 try:
                     if future.result():
                         self.downloaded_files.append(remote_path)

@@ -10,7 +10,7 @@ from dwdown.utils import (
     DateHandler,
     FileHandler,
     LogHandler,
-    Utilities
+    Utilities,
 )
 
 

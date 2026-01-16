@@ -10,7 +10,7 @@ from dwdown.utils import (
     LogHandler,
     OSHandler,
     TimeHandler,
-    Utilities
+    Utilities,
 )
 
 
@@ -247,7 +247,7 @@ class OSUploader(
             }
 
             for future in as_completed(futures):
-                local_file_path, remote_path = futures[future]
+                local_file_path, _remote_path = futures[future]
                 try:
                     if future.result():
                         self.uploaded_files.append(local_file_path)

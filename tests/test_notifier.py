@@ -1,6 +1,6 @@
-import unittest
-from unittest.mock import patch, MagicMock
 import logging
+import unittest
+from unittest.mock import MagicMock, patch
 
 from dwdown.notify import Notifier
 

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from .date_time_utilis import TimeHandler
 
+
 class LogHandler(TimeHandler):
     """
     A class to handle logging for other classes.

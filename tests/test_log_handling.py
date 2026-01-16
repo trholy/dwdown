@@ -1,6 +1,6 @@
-import unittest
-from unittest.mock import patch, MagicMock, mock_open
 import os
+import unittest
+from unittest.mock import MagicMock, mock_open, patch
 
 from dwdown.utils import LogHandler
 
@@ -42,12 +42,12 @@ class TestLogHandler(unittest.TestCase):
         mock_get_logger.return_value = logger_instance
 
         # Trigger the logger setup logic via instantiation
-        handler = LogHandler(log_file_path="logs", log_to_console=True, log_to_file=True)
+        LogHandler(log_file_path="logs", log_to_console=True, log_to_file=True)
 
         self.assertTrue(logger_instance.addHandler.called)
         self.assertGreaterEqual(logger_instance.addHandler.call_count, 2)  # Console and file handlers
 
-    @patch('dwdown.utils.log_handling.logging.FileHandler', side_effect=IOError("Permission denied"))
+    @patch('dwdown.utils.log_handling.logging.FileHandler', side_effect=OSError("Permission denied"))
     @patch('dwdown.utils.log_handling.os.path.join',  return_value="fail_path.log")
     @patch('dwdown.utils.log_handling.logging.getLogger')
     def test_setup_logger_file_error_raises(self, mock_get_logger, mock_path_join, mock_file_handler):
@@ -86,7 +86,7 @@ class TestLogHandler(unittest.TestCase):
 
         logger_instance.info.assert_called_once()
 
-    @patch('dwdown.utils.log_handling.open', side_effect=IOError("disk full"))
+    @patch('dwdown.utils.log_handling.open', side_effect=OSError("disk full"))
     @patch('dwdown.utils.log_handling.LogHandler.get_current_date',  return_value="2024-01-01 12:00:00")
     @patch('dwdown.utils.log_handling.logging.getLogger')
     def test_write_log_file_write_error(self, mock_get_logger, mock_date, mock_open_file):

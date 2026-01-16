@@ -1,13 +1,11 @@
 import os
 from datetime import datetime
 
-import requests
-
 import pytest
+import requests
 import responses
 
 from dwdown.download import ForecastDownloader
-
 
 FIXTURE_HTML_PATH = "fixtures/relhum_index.html"
 os.makedirs(os.path.dirname(FIXTURE_HTML_PATH), exist_ok=True)
@@ -21,7 +19,7 @@ def html_content():
     with open("fixtures/relhum_index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
-    with open(FIXTURE_HTML_PATH, "r", encoding="utf-8") as f:
+    with open(FIXTURE_HTML_PATH, encoding="utf-8") as f:
         return f.read()
 
 
@@ -220,8 +218,8 @@ def test_download_success():
         forecast_run="03",
         variable="relhum",
         grid=None,
-        files_path=str("downloads"),
-        log_files_path=str("logs"),
+        files_path="downloads",
+        log_files_path="logs",
         delay=0.1,
         n_jobs=10,
         retry=0,

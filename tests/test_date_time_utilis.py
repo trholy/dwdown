@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from dwdown.utils import DateHandler, TimeHandler
 
 

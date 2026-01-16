@@ -1,8 +1,8 @@
-import unittest
-from unittest.mock import patch, MagicMock, mock_open, call
-import os
 import hashlib
+import os
 import re
+import unittest
+from unittest.mock import MagicMock, call, mock_open, patch
 
 from dwdown.utils.file_handling import FileHandler
 
