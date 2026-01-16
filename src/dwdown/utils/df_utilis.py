@@ -54,7 +54,7 @@ class DataFrameOperator:
         :param variable: Variable column name to include.
         :return: Filtered DataFrame.
         """
-        selected_columns = list(required_columns) + [variable]
+        selected_columns = [*list(required_columns), variable]
         return df[selected_columns]
 
     @staticmethod
