@@ -26,7 +26,7 @@ setup(
         "lxml>=5.3.0",
         "minio>=7.2.15",
         "pandas>=2.2.3",
-        "requests>=2.32.3",
+        "requests>=2.32.4",
         "xarray>=2024.7.0",
         "urllib3>=2.3.0",
         "cfgrib>=0.9.15.0"
