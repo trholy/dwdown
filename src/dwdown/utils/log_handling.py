@@ -15,10 +15,10 @@ class LogHandler:
     """
 
     def __init__(
-        self,
-        log_file_path: str | None = None,
-        log_to_console: bool = True,
-        log_to_file: bool = True
+            self,
+            log_file_path: str | None = None,
+            log_to_console: bool = True,
+            log_to_file: bool = True
     ):
         """
         Initializes the LogHandler with specified logging options.
@@ -96,8 +96,10 @@ class LogHandler:
 
         time_stamp = self.get_current_date(time_of_day=True, convert_to_str=True)
         formatted_time_stamp = re.sub(r"[-:\s]", "_", time_stamp)
-        log_file_name = (f"{self._log_file_path}/{self.__class__.__name__}_"
-                         f"{variable_name}{file_category}_{formatted_time_stamp}.log")
+        log_file_name = os.path.normpath(os.path.join(
+            self._log_file_path,
+            f"{self.__class__.__name__}_"
+            f"{variable_name}{file_category}_{formatted_time_stamp}.log"))
 
         try:
             with open(log_file_name, "w", encoding="utf-8") as file:
