@@ -49,8 +49,8 @@ class Utilities:
         else:
             raise TypeError(f"Expected a list or string, but got: {type(obj)}")
 
+    @staticmethod
     def _variable_mapping(
-            self,
             variables: list[str],
             mapping_dictionary: dict[str, str]
     ) -> list[str]:

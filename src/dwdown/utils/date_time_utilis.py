@@ -76,7 +76,7 @@ class DateHandler:
         max_timestep = int(max_timestep) if max_timestep is not None else 48
 
         # Ensure they are integers
-        if (not isinstance(min_timestep, int) or not isinstance(max_timestep, int)):
+        if not isinstance(min_timestep, int) or not isinstance(max_timestep, int):
             raise ValueError(
                 "min_timestep and max_timestep must be convertible to integers."
             )
