@@ -114,8 +114,13 @@ def test_get_links_filters_correctly(html_content, downloader):
     date = datetime.now()
     formatted_date = date.strftime("%Y%m%d") + '03'
     
+    # Mock simple filter to return specific list
     expected_links = ["link1.grib2.bz2"]
     downloader.filehandler._simple_filename_filter.return_value = expected_links
+    
+    # Mock advanced filter to return pass-through or processed list
+    full_urls = [requests.compat.urljoin(TEST_URL, l) for l in expected_links]
+    downloader.filehandler._advanced_filename_filter.return_value = full_urls
     
     links = downloader.get_links(
         prefix="icon-d2_germany",
@@ -125,7 +130,8 @@ def test_get_links_filters_correctly(html_content, downloader):
         min_timestep=0,
         max_timestep=20)
     
-    assert links == expected_links
+    # get_links returns the result of advanced filter
+    assert links == full_urls
     downloader.filehandler._simple_filename_filter.assert_called()
 
 
@@ -133,9 +139,12 @@ def test_get_links_filters_correctly(html_content, downloader):
 def test_get_links_no_filtering(html_content, downloader):
     responses.add(responses.GET, TEST_URL, body=html_content, status=200)
     
-    # Simulate filter returning input list
-    # The real implementation might pass some kwargs like norm_path=True.
-    downloader.filehandler._simple_filename_filter.side_effect = lambda filenames, **kwargs: filenames
+    # Simulate filter returning input list, but filtering out parent directory (links ending in /)
+    # This ensures we count only files, matching the expected 1078 count.
+    downloader.filehandler._simple_filename_filter.side_effect = lambda filenames, **kwargs: [f for f in filenames if not f.endswith('/')]
+    
+    # Mock advanced filter to return input (urls)
+    downloader.filehandler._advanced_filename_filter.side_effect = lambda filenames, **kwargs: filenames
     
     links = downloader.get_links(
         prefix=None,
@@ -154,7 +163,10 @@ def test_get_links_no_filtering(html_content, downloader):
 @responses.activate
 def test_get_links_delegation(html_content, downloader):
     responses.add(responses.GET, TEST_URL, body=html_content, status=200)
+    
     downloader.filehandler._simple_filename_filter.return_value = []
+    # advanced filter returns empty list by default mock (MagicMock is iterable? No, need to set it)
+    downloader.filehandler._advanced_filename_filter.return_value = []
     
     downloader.get_links(prefix="test")
     
@@ -169,7 +181,7 @@ def test_get_links_with_invalid_url(downloader):
     assert links == []
 
 
-def test_download_success(downloader):
+def test_download_success(downloader, tmp_path):
     # This test involves threading and file operations.
     # With mocked handlers, we test flow.
     
@@ -179,6 +191,13 @@ def test_download_success(downloader):
     # Needs to set download_links as get_links is mocked and not calling implementation
     downloader.download_links = mock_links
     
+    # Ensure directory exists because filehandler._ensure_directory_exists is mocked and won't create it.
+    # ForecastDownloader uses: os.path.join(files_path, forecast_run, variable)
+    # files_path is from downloader fixture -> tmp_path / "downloads"
+    # forecast_run="03", variable="relhum"
+    download_dir = tmp_path / "downloads" / "03" / "relhum"
+    download_dir.mkdir(parents=True, exist_ok=True)
+
     # Mock session get for the file download
     with responses.RequestsMock() as rsps:
         rsps.add(responses.GET, "http://example.com/file1.grib2", body=b"DATA", status=200)
