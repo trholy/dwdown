@@ -1,9 +1,9 @@
-from dwdown.processing import DataEditor, DataProcessor
+from dwdown.processing import DataMerger, GribFileManager
 
-# Initialize the DataProcessor
-processor = DataProcessor(
-    search_path="download_files",  # Path for files to process
-    extraction_path="extracted_files",  # Path for extracted files
+# Initialize the GribFileManager (formerly DataProcessor)
+processor = GribFileManager(
+    files_path="download_files",  # Path for files to process (formerly search_path)
+    extracted_files_path="extracted_files",  # Path for extracted files (formerly extraction_path)
     converted_files_path="csv_files",  # Path for CSV files
 )
 
@@ -41,19 +41,19 @@ additional_patterns = {
     "smi": [0, 9, 27],
 }
 
-# Initialize DataEditor
-data_editor = DataEditor(
+# Initialize DataMerger (formerly DataEditor)
+data_editor = DataMerger(
     files_path='csv_files/09/',
     required_columns={
         'latitude', 'longitude', 'valid_time'
     },
     join_method='inner',
     mapping_dictionary=mapping_dictionary,
-    additional_pattern_selection=additional_patterns,
+    additional_patterns=additional_patterns, # formerly additional_pattern_selection
 
 )
 
-df = data_editor.merge_dfs(
+df = data_editor.merge(
     time_step=0,
     variables=variables
 )

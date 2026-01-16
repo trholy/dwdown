@@ -1,4 +1,4 @@
-from dwdown.download import DWDDownloader
+from dwdown.download import ForecastDownloader
 
 variables = [
     'aswdifd_s',
@@ -8,14 +8,13 @@ variables = [
 
 for variable in variables:
 
-    # Initialize DWDDownloader
-    dwd_downloader = DWDDownloader(
+    # Initialize ForecastDownloader
+    dwd_downloader = ForecastDownloader(
         url=f"https://opendata.dwd.de/weather/nwp/icon-d2/grib/09/{variable}/",
-        restart_failed_downloads=False,  # Dont retry failed downloads
-        log_downloads=True,  # Log download status
+        retry=0,  # Dont retry failed downloads (formerly restart_failed_downloads)
         delay=0.1,  # 0.1 seconds delay between downloads
-        workers=4,  # Use 4 concurrent workers
-        download_path=f"download_files/09/{variable}",  # Path for downloaded files
+        n_jobs=4,  # Use 4 concurrent workers (formerly workers)
+        files_path=f"download_files/09/{variable}",  # Path for downloaded files (formerly download_path)
         log_files_path="log_files"  # Path for log files
     )
 
@@ -23,9 +22,8 @@ for variable in variables:
     dwd_downloader.get_links(exclude_pattern=["icosahedral"])
 
     # Download files
-    dwd_downloader.download_files(check_for_existence=True)
+    dwd_downloader.download(check_for_existence=True)
 
     # Print status after download
     print("Successfully downloaded files:", dwd_downloader.downloaded_files)
     print("Failed downloads:", dwd_downloader.failed_files)
-    print("Finally failed downloads:", dwd_downloader.finally_failed_files)
