@@ -53,40 +53,40 @@ class OSUploader:
         self._retry = retry
 
         # Initialize Utilities and Date/Time handlers
-        self.utilities = Utilities()
-        self.timehandler = TimeHandler()
-        self.datehandler = DateHandler()
+        self._utilities = Utilities()
+        self._timehandler = TimeHandler()
+        self._datehandler = DateHandler()
 
-        # Initialize Logger
-        self.loghandler = LogHandler(
-            timehandler=self.timehandler,
+        self._loghandler = LogHandler(
+            timehandler=self._timehandler,
             log_file_path=self.log_files_path,
+            logger_name=self.__class__.__name__,
             log_to_console=True,
             log_to_file=True
         )
-        self._logger = self.loghandler.get_logger()
+        self._logger = self._loghandler.get_logger()
 
         # Initialize Client
-        self.clienthandler = ClientHandler(
+        self._clienthandler = ClientHandler(
             endpoint=self._endpoint,
             access_key=self._access_key,
             secret_key=self._secret_key,
             secure=self._secure
         )
-        self.client = self.clienthandler.get_client()
+        self._client = self._clienthandler.get_client()
 
         # Initialize FileHandler
-        self.filehandler = FileHandler(
-            logger=self._logger,
-            utilities=self.utilities
+        self._filehandler = FileHandler(
+            log_handler=self._loghandler,
+            utilities=self._utilities
         )
-        self.filehandler._ensure_directory_exists(self.log_files_path)
+        self._filehandler._ensure_directory_exists(self.log_files_path)
 
         # Initialize OSHandler
-        self.oshandler = OSHandler(
-            logger=self._logger,
-            client=self.client,
-            filehandler=self.filehandler
+        self._oshandler = OSHandler(
+            log_handler=self._loghandler,
+            client=self._client,
+            filehandler=self._filehandler
         )
 
         self.uploaded_files = []
@@ -112,7 +112,7 @@ class OSUploader:
 
             # Skip if the file already exists and matches hash
             if (os.path.basename(local_file_path) in existing_remote_files_with_hashes.keys()
-                    and self.oshandler._verify_file_integrity(
+                    and self._oshandler._verify_file_integrity(
                         local_file_path, None, self.bucket_name,
                         existing_remote_files_with_hashes[os.path.basename(local_file_path)], local_hash)
             ):
@@ -146,11 +146,11 @@ class OSUploader:
             if self._delay > 0:
                 time.sleep(self._delay)
 
-            self.client.fput_object(
+            self._client.fput_object(
                 self.bucket_name, remote_path, local_file_path
             )
 
-            obj_stat = self.client.stat_object(self.bucket_name, remote_path)
+            obj_stat = self._client.stat_object(self.bucket_name, remote_path)
             if obj_stat.etag == local_md5:
                 self._logger.info(f"Successfully uploaded: {local_file_path}")
                 return True
@@ -174,8 +174,8 @@ class OSUploader:
         if self.corrupted_files:
             self._logger.warning(f"{len(self.corrupted_files)} files may be corrupted.")
 
-        self.loghandler._write_log_file(self.uploaded_files, "uploaded_files")
-        self.loghandler._write_log_file(self.corrupted_files, "corrupted_files")
+        self._loghandler._write_log_file(self.uploaded_files, "uploaded_files")
+        self._loghandler._write_log_file(self.corrupted_files, "corrupted_files")
 
     def upload(
             self,
@@ -207,23 +207,23 @@ class OSUploader:
         :param variables: List of variables to filter by.
         :param remote_prefix: Prefix for the folder in the bucket.
         """
-        self.oshandler._ensure_bucket(self.bucket_name, True)
+        self._oshandler._ensure_bucket(self.bucket_name, True)
         if check_for_existence:
-            existing_remote_files_with_hashes = self.oshandler._fetch_existing_files(
+            existing_remote_files_with_hashes = self._oshandler._fetch_existing_files(
                 self.bucket_name, remote_prefix, True
             )
         else:
             existing_remote_files_with_hashes = {}
 
-        filenames = self.filehandler._search_directory(self.files_path)
-        filenames = self.utilities._flatten_list(filenames)
+        filenames = self._filehandler._search_directory(self.files_path)
+        filenames = self._utilities._flatten_list(filenames)
 
-        timesteps = self.datehandler._process_timesteps(
+        timesteps = self._datehandler._process_timesteps(
             min_timestep=min_timestep,
             max_timestep=max_timestep
         )
 
-        filtered_filenames = self.filehandler._simple_filename_filter(
+        filtered_filenames = self._filehandler._simple_filename_filter(
             filenames=filenames,
             prefix=prefix,
             suffix=suffix,
@@ -233,7 +233,7 @@ class OSUploader:
             timesteps=timesteps
         )
 
-        filtered_filenames = self.filehandler._advanced_filename_filter(
+        filtered_filenames = self._filehandler._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
             variables=variables
@@ -241,7 +241,7 @@ class OSUploader:
 
         local_files_with_hashes = {}
         for obj in filtered_filenames:
-            local_files_with_hashes[obj] = self.filehandler._calculate_md5(obj)
+            local_files_with_hashes[obj] = self._filehandler._calculate_md5(obj)
 
         files_to_upload = self._build_upload_list(
             local_files_with_hashes,
@@ -277,5 +277,5 @@ class OSUploader:
 
         :return: None
         """
-        self.filehandler._delete_files_safely(self.uploaded_files, "uploaded file")
-        self.filehandler._cleanup_empty_dirs(self.files_path)
+        self._filehandler._delete_files_safely(self.uploaded_files, "uploaded file")
+        self._filehandler._cleanup_empty_dirs(self.files_path)

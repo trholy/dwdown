@@ -39,31 +39,32 @@ class GribFileManager:
         self.log_files_path = os.path.normpath(log_files_path or "log_files")
 
         # Initialize Utilities and Date/Time handlers
-        self.utilities = Utilities()
-        self.timehandler = TimeHandler()
-        self.datehandler = DateHandler()
-
-        # Initialize Logger
-        self.loghandler = LogHandler(
-            timehandler=self.timehandler,
+        self._utilities = Utilities()
+        self._timehandler = TimeHandler()
+        # Initialize Logger first
+        self._loghandler = LogHandler(
+            timehandler=self._timehandler,
             log_file_path=self.log_files_path,
+            logger_name=self.__class__.__name__,
             log_to_console=True,
             log_to_file=True
         )
-        self._logger = self.loghandler.get_logger()
+        self._logger = self._loghandler.get_logger()
+        
+        self._datehandler = DateHandler(log_handler=self._loghandler)
 
         # Initialize FileHandler
-        self.filehandler = FileHandler(
-            logger=self._logger,
-            utilities=self.utilities
+        self._filehandler = FileHandler(
+            log_handler=self._loghandler,
+            utilities=self._utilities
         )
-        self.filehandler._ensure_directories_exist([
+        self._filehandler._ensure_directories_exist([
             self.files_path, self.extracted_files_path,
             self.converted_files_path, self.log_files_path
         ])
 
         # Initialize DataFrameOperator
-        self.dataframe_operator = DataFrameOperator(logger=self._logger)
+        self._dataframe_operator = DataFrameOperator(log_handler=self._loghandler)
 
         self.processed_download_files = []
         self.decompressed_files = []
@@ -83,7 +84,7 @@ class GribFileManager:
         )
         decompressed_file_path = os.path.normpath(decompressed_file_path)
 
-        self.filehandler._ensure_directory_exists(os.path.dirname(decompressed_file_path))
+        self._filehandler._ensure_directory_exists(os.path.dirname(decompressed_file_path))
 
         return decompressed_file_path
 
@@ -100,7 +101,7 @@ class GribFileManager:
         csv_file_path = csv_file_path.replace('.grib2', '.csv')
         csv_file_path = os.path.normpath(csv_file_path)
 
-        self.filehandler._ensure_directory_exists(os.path.dirname(csv_file_path))
+        self._filehandler._ensure_directory_exists(os.path.dirname(csv_file_path))
 
         return csv_file_path
 
@@ -175,12 +176,12 @@ class GribFileManager:
                         )
                         return
 
-                    df = self.dataframe_operator._filter_by_coordinates(
+                    df = self._dataframe_operator._filter_by_coordinates(
                         df,
                         start_lat, end_lat,
                         start_lon, end_lon
                     )
-                self.dataframe_operator._save_as_csv(df, csv_file_path)
+                self._dataframe_operator._save_as_csv(df, csv_file_path)
 
                 self.converted_files.append(csv_file_path)
             else:
@@ -219,15 +220,15 @@ class GribFileManager:
         :param variables: Variables to filter by.
         :return: List of filenames.
         """
-        timesteps = self.datehandler._process_timesteps(
+        timesteps = self._datehandler._process_timesteps(
             min_timestep=min_timestep,
             max_timestep=max_timestep
         )
 
-        filenames = self.filehandler._search_directory(self.files_path)
-        filenames = self.utilities._flatten_list(filenames)
+        filenames = self._filehandler._search_directory(self.files_path)
+        filenames = self._utilities._flatten_list(filenames)
 
-        filtered_files = self.filehandler._simple_filename_filter(
+        filtered_files = self._filehandler._simple_filename_filter(
             filenames=filenames,
             prefix=prefix,
             suffix=suffix,
@@ -237,7 +238,7 @@ class GribFileManager:
             timesteps=timesteps
         )
 
-        filtered_files = self.filehandler._advanced_filename_filter(
+        filtered_files = self._filehandler._advanced_filename_filter(
             filenames=filtered_files,
             patterns=additional_patterns,
             variables=variables
@@ -319,16 +320,16 @@ class GribFileManager:
         :param converted_files: Whether to delete converted files.
         """
         if delete_downloaded:
-            self.filehandler._delete_files_safely(
+            self._filehandler._delete_files_safely(
                 self.processed_download_files, "downloaded file")
-            self.filehandler._cleanup_empty_dirs(self.files_path)
+            self._filehandler._cleanup_empty_dirs(self.files_path)
 
         if delete_decompressed:
-            self.filehandler._delete_files_safely(
+            self._filehandler._delete_files_safely(
                 self.decompressed_files, "decompressed file")
-            self.filehandler._cleanup_empty_dirs(self.extracted_files_path)
+            self._filehandler._cleanup_empty_dirs(self.extracted_files_path)
 
         if converted_files:
-            self.filehandler._delete_files_safely(
+            self._filehandler._delete_files_safely(
                 self.converted_files, "converted file")
-            self.filehandler._cleanup_empty_dirs(self.converted_files_path)
+            self._filehandler._cleanup_empty_dirs(self.converted_files_path)

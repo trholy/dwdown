@@ -72,34 +72,37 @@ class ForecastDownloader:
         self._xpath_files = xpath_files or "/html/body/pre//a/@href"
         self._xpath_meta_data = xpath_meta_data or "//pre/text()"
 
-        # Initialize Utilities
-        self.utilities = Utilities()
-        self.timehandler = TimeHandler()
-        self.datehandler = DateHandler()
+        self._utilities = Utilities()
+        self._timehandler = TimeHandler()
 
         # Initialize Logger
-        self.loghandler = LogHandler(
-            timehandler=self.timehandler,
+        self._loghandler = LogHandler(
+            timehandler=self._timehandler,
             log_file_path=self.log_files_path,
+            logger_name=self.__class__.__name__,
             log_to_console=True,
             log_to_file=True
         )
-        self._logger = self.loghandler.get_logger()
+        self._logger = self._loghandler.get_logger()
+        
+        self._datehandler = DateHandler(log_handler=self._loghandler)
 
         # Initialize FileHandler
-        self.filehandler = FileHandler(
-            logger=self._logger,
-            utilities=self.utilities
+        self._filehandler = FileHandler(
+            log_handler=self._loghandler,
+            utilities=self._utilities
         )
-        self.filehandler._ensure_directories_exist([self.files_path, self.log_files_path])
+        self._filehandler._ensure_directories_exist(
+            [self.files_path, self.log_files_path]
+        )
 
         # Initialize Session
-        self.sessionhandler = SessionHandler(
+        self._sessionhandler = SessionHandler(
             num_retries=5,
             backoff_factor=2,
             status_forcelist=(429, 500, 502, 503, 504)
         )
-        self._session = self.sessionhandler.get_session()
+        self._session = self._sessionhandler.get_session()
 
         self._base_url = base_url or "https://opendata.dwd.de/weather/nwp"
         if url:
@@ -172,12 +175,14 @@ class ForecastDownloader:
         tree = html.fromstring(response.content)
         raw_meta_data = tree.xpath(self._xpath_meta_data)
 
-        fixed_dates = self.datehandler._fix_date_format(raw_meta_data)
+        fixed_dates = self._datehandler._fix_date_format(raw_meta_data)
         cleaned_dates = [
             re.sub(r'\s+', '', date.replace(' -', ''))
             for date in fixed_dates]
 
-        parsed_dates = self.datehandler._parse_dates(cleaned_dates, date_pattern, self._logger)
+        parsed_dates = self._datehandler._parse_dates(
+            cleaned_dates, date_pattern, self._logger
+        )
 
         return min(parsed_dates), max(parsed_dates)
 
@@ -232,8 +237,8 @@ class ForecastDownloader:
         prefix = prefix or self.model
         suffix = suffix or ".grib2.bz2"
 
-        include_pattern = self.utilities._string_to_list(include_pattern)
-        exclude_pattern = self.utilities._string_to_list(exclude_pattern)
+        include_pattern = self._utilities._string_to_list(include_pattern)
+        exclude_pattern = self._utilities._string_to_list(exclude_pattern)
 
         include_pattern += self._set_grid_filter(self.grid)
 
@@ -241,12 +246,12 @@ class ForecastDownloader:
         if not filenames:
             return []
 
-        timesteps = self.datehandler._process_timesteps(
+        timesteps = self._datehandler._process_timesteps(
             min_timestep=min_timestep,
             max_timestep=max_timestep
         )
 
-        filtered_filenames = self.filehandler._simple_filename_filter(
+        filtered_filenames = self._filehandler._simple_filename_filter(
             filenames=filenames,
             prefix=prefix,
             suffix=suffix,
@@ -261,11 +266,11 @@ class ForecastDownloader:
         ]
 
         # Use static method from FileHandler (class or instance is fine for static)
-        filtered_filenames = self.filehandler._advanced_filename_filter(
+        filtered_filenames = self._filehandler._advanced_filename_filter(
             filenames=filtered_filenames,
             patterns=additional_patterns,
             variables=self.variable if self.variable is None
-            else self.utilities._string_to_list(self.variable)
+            else self._utilities._string_to_list(self.variable)
         )
 
         self.download_links = filtered_filenames
@@ -296,7 +301,7 @@ class ForecastDownloader:
                     self.files_path, self.forecast_run, self.variable
                 )
                 downloaded_file_path = os.path.join(files_path, filename)
-                self.filehandler._ensure_directory_exists(files_path)
+                self._filehandler._ensure_directory_exists(files_path)
             else:
                 downloaded_file_path = os.path.join(self.files_path, filename)
             downloaded_file_path = os.path.normpath(downloaded_file_path)
@@ -401,10 +406,10 @@ class ForecastDownloader:
 
         variable = self._get_variable_from_link(self.url)
 
-        self.loghandler._write_log_file(
+        self._loghandler._write_log_file(
             self.downloaded_files, "downloaded_files", variable
         )
-        self.loghandler._write_log_file(
+        self._loghandler._write_log_file(
             self.failed_files, "failed_files", variable
         )
 
@@ -414,7 +419,7 @@ class ForecastDownloader:
 
         :return: None
         """
-        self.filehandler._delete_files_safely(
+        self._filehandler._delete_files_safely(
             self._downloaded_files_paths, "downloaded file"
         )
-        self.filehandler._cleanup_empty_dirs(self.files_path)
+        self._filehandler._cleanup_empty_dirs(self.files_path)

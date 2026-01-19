@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import logging
 import os.path
+from typing import TYPE_CHECKING
 
 from minio import Minio
 from minio.error import S3Error
 
 from dwdown.utils.file_handling import FileHandler
+
+if TYPE_CHECKING:
+    from dwdown.utils.log_handling import LogHandler
 
 
 class OSHandler:
@@ -13,25 +19,25 @@ class OSHandler:
     file fetching, filtering, and integrity verification.
 
     Attributes:
-        client (Minio): The MinIO client for interacting with the object storage.
-        logger (logging.Logger): Logger for logging messages.
+        _client (Minio): The MinIO client for interacting with the object storage.
+        _logger (logging.Logger): Logger for logging messages.
     """
 
     def __init__(
             self,
-            logger: logging.Logger,
+            log_handler: LogHandler,
             client: Minio,
             filehandler: FileHandler
     ):
         """
         Initializes the OSHandler with a MinIO client and a logger.
-        :param logger: Logger instance.
+        :param log_handler: LogHandler instance.
         :param client: Minio client instance.
         :param filehandler: FileHandler instance.
         """
-        self.logger = logger
-        self.client = client
-        self.filehandler = filehandler
+        self._logger = log_handler.get_logger()
+        self._client = client
+        self._filehandler = filehandler
 
     def _ensure_bucket(
         self,
@@ -44,15 +50,15 @@ class OSHandler:
         :param bucket_name: The name of the bucket to ensure.
         :param create_if_not_exists: Whether to create the bucket if it does not exist.
         """
-        if not self.client.bucket_exists(bucket_name):
+        if not self._client.bucket_exists(bucket_name):
             if create_if_not_exists:
-                self.client.make_bucket(bucket_name)
-                self.logger.info(f"Created bucket {bucket_name}")
+                self._client.make_bucket(bucket_name)
+                self._logger.info(f"Created bucket {bucket_name}")
             else:
-                self.logger.info(
+                self._logger.info(
                     f"Bucket {bucket_name} does not exist and will not be created")
         else:
-            self.logger.info(f"Bucket {bucket_name} exists")
+            self._logger.info(f"Bucket {bucket_name} exists")
 
     def _fetch_existing_files(
             self,
@@ -74,7 +80,7 @@ class OSHandler:
         existing_files = {}
 
         try:
-            objects = self.client.list_objects(
+            objects = self._client.list_objects(
                 bucket_name,
                 prefix=remote_prefix,
                 recursive=True)
@@ -86,7 +92,7 @@ class OSHandler:
                 existing_files[obj_name] = obj_stat.etag  # Store remote path and its hash
 
         except S3Error as e:
-            self.logger.error(f"Failed to fetch existing files: {e}")
+            self._logger.error(f"Failed to fetch existing files: {e}")
             raise
 
         return existing_files
@@ -111,14 +117,14 @@ class OSHandler:
         """
         try:
             if local_md5 is None:
-                local_md5 = self.filehandler._calculate_md5(local_file_path)
+                local_md5 = self._filehandler._calculate_md5(local_file_path)
             if remote_hash is None:
-                obj_stat = self.client.stat_object(bucket_name, remote_path)
+                obj_stat = self._client.stat_object(bucket_name, remote_path)
                 remote_hash = obj_stat.etag
             return remote_hash == local_md5
 
         except Exception as e:
-            self.logger.error(
+            self._logger.error(
                 f"Error verifying file integrity for {remote_path}: {e}"
             )
             return False

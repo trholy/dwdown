@@ -22,8 +22,9 @@ class LogHandler:
 
     def __init__(
             self,
-            timehandler: TimeHandler,
+            timehandler: TimeHandler | None,
             log_file_path: str | None = None,
+            logger_name: str | None = None,
             log_to_console: bool = True,
             log_to_file: bool = True
     ):
@@ -31,11 +32,13 @@ class LogHandler:
         Initializes the LogHandler with specified logging options.
 
         :param log_file_path: The directory path where log files will be stored.
+        :param logger_name: The name of the logger (usually the class name).
         :param log_to_console: Whether to log to the console.
         :param log_to_file: Whether to log to a file.
         """
 
         self._log_file_path = log_file_path or "log_files"
+        self._logger_name = logger_name or self.__class__.__name__
         self._log_to_console = log_to_console
         self._log_to_file = log_to_file
 
@@ -55,7 +58,7 @@ class LogHandler:
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         # Create a logger and set its level to INFO
-        logger = logging.getLogger(self.__class__.__name__)
+        logger = logging.getLogger(self._logger_name)
         logger.setLevel(logging.INFO)
 
         # Set up console handler if enabled
@@ -66,8 +69,9 @@ class LogHandler:
 
         # Set up file handler if enabled
         time_stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        time_stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         if self._log_to_file:
-            log_file_name = f"{self.__class__.__name__}_{time_stamp}.log"
+            log_file_name = f"{self._logger_name}_{time_stamp}.log"
             
             # Ensure directory exists before creating file handler
             if not os.path.exists(self._log_file_path):
@@ -112,7 +116,7 @@ class LogHandler:
         formatted_time_stamp = re.sub(r"[-:\s]", "_", time_stamp)
         log_file_name = os.path.normpath(os.path.join(
             self._log_file_path,
-            f"{self.__class__.__name__}_"
+            f"{self._logger_name}_"
             f"{variable_name}{file_category}_{formatted_time_stamp}.log")
         )
 

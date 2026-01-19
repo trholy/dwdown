@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-import logging
 import re
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dwdown.utils.log_handling import LogHandler
 
 
 class DateHandler:
@@ -10,11 +13,14 @@ class DateHandler:
     A class to handle time-related operations, esp. date parsing.
 
     """
-    def __init__(self):
+    def __init__(self, log_handler: LogHandler | None = None):
         """
         Initializes the DateHandler.
 
+        :param log_handler: Optional LogHandler instance.
         """
+        self._log_handler = log_handler
+        self._logger = log_handler.get_logger() if log_handler else None
 
     @staticmethod
     def _fix_date_format(dates: list[str]) -> list[str]:
@@ -42,15 +48,13 @@ class DateHandler:
     def _parse_dates(
             self,
             date_strings: list[str],
-            date_pattern: str | None = None,
-            logger: logging.Logger | None = None
+            date_pattern: str | None = None
     ) -> list[datetime]:
         """
         Parses date strings into datetime objects.
 
         :param date_strings: List of date strings to be parsed.
         :param date_pattern: The format pattern for parsing dates.
-        :param logger: Optional logger for logging warnings.
         :return: List of parsed datetime objects.
         """
         date_pattern = date_pattern or "%d-%b-%Y-%H:%M:%S"
@@ -60,8 +64,8 @@ class DateHandler:
             try:
                 parsed_dates.append(datetime.strptime(date, date_pattern))
             except ValueError as e:
-                if logger:
-                    logger.info(f"Skipping invalid date format: {date} ({e})")
+                if self._logger:
+                    self._logger.info(f"Skipping invalid date format: {date} ({e})")
 
         return parsed_dates
 

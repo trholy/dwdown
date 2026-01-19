@@ -1,16 +1,21 @@
-import logging
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
+if TYPE_CHECKING:
+    from dwdown.utils.log_handling import LogHandler
+
 
 class DataFrameOperator:
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, log_handler: LogHandler):
         """
         Initializes the DataFrameOperator.
-        :param logger: Logger instance.
+        :param log_handler: LogHandler instance.
         """
-        self.logger = logger
+        self._logger = log_handler.get_logger()
 
     def _validate_columns_exist(
             self,
@@ -37,7 +42,7 @@ class DataFrameOperator:
 
         missing_columns = mapped_columns - set(df.columns)
         if missing_columns:
-            self.logger.warning(
+            self._logger.warning(
                 f"Missing required columns in DataFrame: {missing_columns}."
             )
             return False
@@ -60,8 +65,8 @@ class DataFrameOperator:
         selected_columns = [*list(required_columns), variable]
         return df[selected_columns]
 
-    @staticmethod
     def _parse_datetime(
+            self,
             series: pd.Series,
             column: str
     ) -> pd.Series:
@@ -76,21 +81,21 @@ class DataFrameOperator:
             parsed_series = pd.to_datetime(series, errors='coerce')
             invalid_dates = parsed_series.isna().sum()
             if invalid_dates > 0:
-                logging.warning(
+                self._logger.warning(
                     f"{invalid_dates} invalid '{column}'"
                     f" entries were coerced to NaT."
                 )
         except ValueError as e:
-            logging.error(f"ValueError while parsing '{column}': {e}")
+            self._logger.error(f"ValueError while parsing '{column}': {e}")
             parsed_series = series  # Return the original series if parsing fails
         except Exception as e:
-            logging.error(f"Unexpected error while parsing '{column}': {e}")
+            self._logger.error(f"Unexpected error while parsing '{column}': {e}")
             parsed_series = series  # Return the original series if parsing fails
 
         return parsed_series
 
-    @staticmethod
     def _filter_by_coordinates(
+            self,
             df: pd.DataFrame,
             start_lat: float | None,
             end_lat: float | None,
@@ -108,7 +113,7 @@ class DataFrameOperator:
         :return: Filtered DataFrame.
         """
         if None in (start_lat, end_lat, start_lon, end_lon):
-            logging.warning(
+            self._logger.warning(
                 "Geographic filtering is enabled but no valid coordinates"
                 " provided. Skipping filter."
             )
@@ -154,14 +159,14 @@ class DataFrameOperator:
         common_columns = columns_in_df1 & columns_in_df2 & merge_on
 
         if not common_columns:
-            self.logger.warning(
+            self._logger.warning(
                 "No common columns found for merging on %s. "
                 "Returning 'df1' unchanged.", merge_on
             )
             return df1
 
         # Log the merge operation details
-        self.logger.info(
+        self._logger.info(
             "Merging dataframes on columns: %s using method: %s",
             common_columns, join_method
         )
@@ -171,7 +176,7 @@ class DataFrameOperator:
                 df2, on=list(common_columns), how=join_method
             )
         except Exception as e:
-            self.logger.error(
+            self._logger.error(
                 "Error merging dataframes on columns: %s using method: %s. "
                 "Returning 'df1' unchanged. Error: %s",
                 common_columns, join_method, e
@@ -179,7 +184,7 @@ class DataFrameOperator:
             return df1
 
         # Log the result of the merge
-        self.logger.info("Merged dataframe shape: %s", merged_df.shape)
+        self._logger.info("Merged dataframe shape: %s", merged_df.shape)
 
         return merged_df
 
@@ -215,11 +220,11 @@ class DataFrameOperator:
         try:
             return pd.read_csv(csv_file, sep=sep, index_col=index_col)
         except FileNotFoundError:
-            self.logger.error(f"File not found: {csv_file}", exc_info=True)
+            self._logger.error(f"File not found: {csv_file}", exc_info=True)
         except pd.errors.EmptyDataError:
-            self.logger.error(f"File is empty: {csv_file}", exc_info=True)
+            self._logger.error(f"File is empty: {csv_file}", exc_info=True)
         except Exception as e:
-            self.logger.error(
+            self._logger.error(
                 f"Error reading file {csv_file}: {e}", exc_info=True)
         return None
 
@@ -238,6 +243,6 @@ class DataFrameOperator:
         """
         try:
             df.to_csv(file_path, index=index)
-            self.logger.info(f"Saved CSV file: {os.path.basename(file_path)}")
+            self._logger.info(f"Saved CSV file: {os.path.basename(file_path)}")
         except Exception as e:
-            self.logger.error(f"Error saving CSV file: {e}")
+            self._logger.error(f"Error saving CSV file: {e}")
