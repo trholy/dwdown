@@ -4,15 +4,14 @@
 
 ## Features
 
-- **DWDDownloader**: Fetch weather forecast data from the DWD open data server.
-- **MinioDownloader**: Download files from a S3 compatible / [MinIO object storage server](https://github.com/minio/minio).
-- **MinioUploader**: Upload downloaded data to a S3 compatible / MinIO object storage server with parallel uploads and data integrity checks.
-- **DataProcessor**: Extract, convert and filter data for further analysis.
-- **DataEditor**: Filter and merge CSV data.
+- **ForecastDownloader**: Fetch weather forecast data from the DWD open data server.
+- **OSDownloader**: Download files from a S3 compatible / [MinIO object storage server](https://github.com/minio/minio).
+- **OSUploader**: Upload downloaded data to a S3 compatible / MinIO object storage server with parallel uploads and data integrity checks.
+- **GribFileManager**: Extract BZ2 archives and convert GRIB2 files to CSV format.
+- **DataMerger**: Filter and merge CSV dataframes.
 - **Notifier**: Receive status messages of downloads, uploads, and any errors from a [Gotify server](https://github.com/gotify).
 - **Logging**: Automatically log download and upload activities, and handle errors gracefully.
-- **Parallel Uploading**: Upload large datasets in parallel for faster performance.
-- **Automatic Bucket Creation**: Create MinIO buckets if they do not exist.
+- **Parallel Processing**: Download, upload, and process files in parallel for faster performance.
 
 ## Installation
 
@@ -30,139 +29,124 @@ Read the documentation on [GitLab Pages](https://to82lod.gitpages.uni-jena.de/dw
 
 ## Usage
 
-### Example Workflow
+### ForecastDownloader: Download Data from DWD
 
-![](./img/example_workflow.png)
-
-### DWDDownloader: Download Data from DWD
-
-The `DWDDownloader` class allows you to download weather forecast files from the DWD open data server.
+The `ForecastDownloader` class allows you to download weather forecast files from the DWD open data server.
 
 ```python
-from dwdown.download import DWDDownloader
+from dwdown.download import ForecastDownloader
 
-# Initialize DWDDownloader
-dwd_downloader = DWDDownloader(
-    url="https://opendata.dwd.de/weather/nwp/icon-d2/grib/09/aswdifu_s/",
-    restart_failed_downloads=False,  # Dont retry failed downloads
-    log_downloads=True,  # Log download status
-    delay=0.1,  # 0.1 seconds delay between downloads
-    workers=4,  # Use 4 concurrent workers
-    download_path="download_files",  # Path for downloaded files
-    log_files_path="log_files"  # Path for log files
-)
+variables = [
+    'aswdifd_s',
+    'relhum',
+    'smi',
+]
 
-# Fetch download links
-dwd_downloader.get_links(
-    exclude_pattern=["icosahedral"],
-    min_timestep=0,
-    max_timestep=10
-)
+for variable in variables:
 
-# Download files
-dwd_downloader.download_files(
-    check_for_existence=True,
-    max_retries=3
-)
+    # Initialize ForecastDownloader
+    dwd_downloader = ForecastDownloader(
+        url=f"https://opendata.dwd.de/weather/nwp/icon-d2/grib/09/{variable}/",
+        retry=0,  # Dont retry failed downloads
+        delay=0.1,  # 0.1 seconds delay between downloads
+        n_jobs=4,  # Use 4 concurrent workers
+        files_path=f"download_files/09/{variable}",  # Path for downloaded files
+        log_files_path="log_files"  # Path for log files
+    )
 
-# Print status after download
-print("Successfully downloaded files:", dwd_downloader.downloaded_files)
-print("Failed downloads:", dwd_downloader.failed_files)
-print("Finally failed downloads:", dwd_downloader.finally_failed_files)
+    # Fetch download links
+    dwd_downloader.get_links(exclude_pattern=["icosahedral"])
+
+    # Download files
+    dwd_downloader.download(check_for_existence=True)
+
+    # Print status after download
+    print("Successfully downloaded files:", dwd_downloader.downloaded_files)
+    print("Failed downloads:", dwd_downloader.failed_files)
 ```
 
-### MinioUploader: Upload Data to MinIO
+### OSUploader: Upload Data to Object Storage
 
-The `MinioUploader` class helps upload files to a [MinIO object storage server](https://github.com/minio/minio), ensuring data integrity with MD5 hash verification.
+The `OSUploader` class helps upload files to a [MinIO object storage server](https://github.com/minio/minio) or any S3-compatible storage, ensuring data integrity with MD5 hash verification.
 
 ```python
-from dwdown.upload import MinioUploader
+from dwdown.upload import OSUploader
 
-# Initialize MinioUploader
-uploader = MinioUploader(
+# Initialize OSUploader
+uploader = OSUploader(
     endpoint="your-minio-sever.com",
     access_key="your-access-key",
     secret_key="your-secret-key",
     files_path="download_files",  # Path for files to upload
-    bucket_name="weather-forecasts",  # Name of the minio bucket 
-    secure=False,  # If ‘true’ API requests will be secure (HTTPS), and insecure (HTTP) otherwise
-    log_uploads=True,  # Log upload status
+    bucket_name="weather-forecasts",  # Name of the minio bucket
+    secure=False,  # If "true" API requests will be secure (HTTPS), and insecure (HTTP) otherwise
     log_files_path="log_files",  # Path for log files
-    workers=4  # Use 4 concurrent workers
+    n_jobs=4  # Use 4 concurrent workers
 )
 
 # Upload files to MinIO
-uploader.upload_directory()
+uploader.upload()
+# Optional: Delete local files after upload
+# uploader.delete()
 
 # Print status after upload
 print("Successfully uploaded files:", uploader.uploaded_files)
 print("Upload might be corrupted:", uploader.corrupted_files)
 ```
 
-### MinioDownloader: Download Data from MinIO
+### OSDownloader: Download Data from Object Storage
 
-The `MinioDownloader` class helps you download files from a [MinIO object storage server](https://github.com/minio/minio).
+The `OSDownloader` class helps you download files from a [MinIO object storage server](https://github.com/minio/minio) or any S3-compatible storage.
 
 ```python
-from dwdown.download import MinioDownloader
+from dwdown.download import OSDownloader
 
-# Initialize MinioDownloader
-minio_downloader = MinioDownloader(
+# Initialize OSDownloader
+minio_downloader = OSDownloader(
     endpoint="your-minio-sever.com",
     access_key="your-access-key",
     secret_key="your-secret-key",
     files_path="download_files",  # Path for files to download
-    secure=False,  # If ‘true’ API requests will be secure (HTTPS), and insecure (HTTP) otherwise
-    log_downloads=True,  # Log upload status
+    bucket_name="weather-forecasts",  # Name of the minio bucket
+    secure=False,  # If "true" API requests will be secure (HTTPS), and insecure (HTTP) otherwise
     log_files_path="log_files",  # Path for log files
-    workers=4  # Use 4 concurrent workers
+    n_jobs=4  # Use 4 concurrent workers
 )
 
 # Download files from MinIO
-minio_downloader.download_bucket(
-    bucket_name="weather-forecasts",  # Name of the minio bucket 
-    folder_prefix='aswdifu_s'
-)
-    
-# Print status after upload
+minio_downloader.download()
+
+# Print status after download
 print("Successfully downloaded files:", minio_downloader.downloaded_files)
 print("Download might be corrupted:", minio_downloader.corrupted_files)
 ```
 
-### DataProcessor: Process and Convert Data
+### GribFileManager & DataMerger: Process and Merge Data
 
-The `DataProcessor` class provides tools for extracting, converting, filtering and processing data.
+The `GribFileManager` handles decompression and conversion of GRIB2 files, while `DataMerger` (formerly DataEditor) allows for merging and filtering CSV dataframes.
 
 ```python
-from dwdown.processing import DataProcessor
+from dwdown.processing import DataMerger, GribFileManager
 
-# Initialize the DataProcessor
-editor = DataProcessor(
-    search_path="download_files",  # Path for files to process
-    extraction_path="extracted_files",  # Path for extracted files
+# Initialize the GribFileManager
+processor = GribFileManager(
+    files_path="download_files",  # Path for files to process
+    extracted_files_path="extracted_files",  # Path for extracted files
     converted_files_path="csv_files",  # Path for CSV files
 )
 
 # Retrieve the filenames that have been downloaded
-file_names = editor.get_filenames()
+file_names = processor.get_filenames()
 
 # Convert downloaded files into CSV format
-editor.get_csv(
+processor.get_csv(
     file_names=file_names,
     apply_geo_filtering=True,
     start_lat=50.840,
     end_lat=51.000,
     start_lon=11.470,
-    end_lon=11.690
+    end_lon=11.690,
 )
-```
-
-### Data Processing with DataEditor
-
-The `DataEditor` class provides tools for merging and filtering CSV data.
-
-```python
-from dwdown.processing import DataEditor
 
 # Variables to build merged dataframe from
 variables = [
@@ -184,23 +168,24 @@ additional_patterns = {
     "smi": [0, 9, 27],
 }
 
-# Initialize DataEditor
-data_editor = DataEditor(
+# Initialize DataMerger
+data_editor = DataMerger(
     files_path='csv_files/09/',
     required_columns={
         'latitude', 'longitude', 'valid_time'
     },
     join_method='inner',
     mapping_dictionary=mapping_dictionary,
-    additional_pattern_selection=additional_patterns,
-
+    additional_patterns=additional_patterns,
 )
 
-df = data_editor.merge_dfs(
+df = data_editor.merge(
     time_step=0,
     variables=variables
 )
 print("Processed DataFrame:", df)
+
+df.to_csv('processed_dataframe.csv')
 ```
 
 ### Notifier: Send Status Updates
@@ -254,48 +239,87 @@ notifier.send_notification(
 The package structure is as follows:
 
 ```
-dwdown/
-├── src/
-│   ├── dwdown/
-│   │   ├── __init__.py
-│   │   ├── downloader/
-│   │   │   ├── download.py
-│   │   │   ├── __init__.py
-│   │   ├── notify/
-│   │   │   ├── notifier.py
-│   │   │   ├── __init__.py
-│   │   ├── uploader/
-│   │   │   ├── upload.py
-│   │   │   ├── __init__.py
-│   │   ├── processor/
-│   │   │   ├── processing.py
-│   │   │   ├── __init__.py
-│   │   ├── tools/
-│   │   │   ├── tools.py
-│   │   │   ├── __init__.py
-├── example_usage/
+./
+├── .git
+├── .gitignore
+├── .gitlab-ci.yml
+├── LICENSE
+├── README.md
+├── THIRD_PARTY_LICENSES.txt
+├── docs
+│   ├── data
+│   │   └── MappingStore.md
+│   ├── download
+│   │   ├── ForecastDownloader.md
+│   │   └── OSDownloader.md
+│   ├── notify
+│   │   └── Notifier.md
+│   ├── processing
+│   │   ├── DataMerger.md
+│   │   └── GribFileManager.md
+│   ├── upload
+│   │   └── OSUploader.md
+│   └── utils
+│       ├── DataFrameOperator.md
+│       ├── DateTimeUtils.md
+│       ├── FileHandler.md
+│       ├── LogHandler.md
+│       ├── NetworkHandlers.md
+│       ├── OSHandler.md
+│       └── Utilities.md
+├── example_usage
 │   ├── dwd_processing.py
 │   ├── dwd_scraper.py
 │   ├── minio_downloader.py
 │   ├── minio_uploader.py
-│   ├── notifier.py
+│   └── notifier.py
+├── img
+│   └── example_workflow.png
+├── mkdocs.yml
 ├── pyproject.toml
-├── README.md
-├── LICENSE
-├── .gitignore
+├── setup.py
+├── src
+│   └── dwdown
+│       ├── __init__.py
+│       ├── data
+│       │   ├── __init__.py
+│       │   └── mapping.py
+│       ├── download
+│       │   ├── __init__.py
+│       │   ├── forecast_download.py
+│       │   └── os_download.py
+│       ├── notify
+│       │   ├── __init__.py
+│       │   └── notifier.py
+│       ├── processing
+│       │   ├── __init__.py
+│       │   ├── data_merging.py
+│       │   ├── grib_data_handling.py
+│       ├── upload
+│       │   ├── __init__.py
+│       │   └── os_upload.py
+│       └── utils
+│           ├── __init__.py
+│           ├── date_time_utilis.py
+│           ├── df_utilis.py
+│           ├── file_handling.py
+│           ├── general_utilis.py
+│           ├── log_handling.py
+│           ├── network_handling.py
+│           └── os_handling.py
+├── tests
+│   ├── test_ForecastDownloader.py
+│   ├── test_OSDownloader.py
+│   ├── test_OSUploader.py
+│   ├── test_date_time_utilis.py
+│   ├── test_file_handling.py
+│   ├── test_log_handling.py
+│   ├── test_mapping.py
+│   ├── test_network_handling.py
+│   ├── test_notifier.py
+│   ├── test_processing.py
+│   └── test_utils.py
 ```
-
-## Dependencies
-
-- `lxml`: Required for parsing XML files (for DWD data).
-- `minio`: For uploading files to a MinIO server.
-- `pandas`: For data processing and handling CSV files.
-- `requests`: For making HTTP requests to the DWD API.
-- `xarray`: For handling multi-dimensional arrays (used for handling weather data).
-
-### Optional Development Dependencies
-- `pytest`: For running tests.
-- `ruff`: For linting Python code.
 
 ## License
 
@@ -307,6 +331,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contributing
 
-If you’d like to contribute to the development of `dwdown`, feel free to fork the repository, create a branch for your feature or fix, and submit a pull request.
-
----
+Feel free to contribute to the development of `dwdown`!
