@@ -150,9 +150,16 @@ class ForecastDownloader:
          variable name cannot be determined.
         """
         parsed_url = urlparse(link)
+        is_directory = parsed_url.path.endswith('/')
         path_components = parsed_url.path.strip('/').split('/')
-        # Assuming the variable name is the second last component in the path
-        return path_components[-2] if len(path_components) > 1 else ''
+
+        if not path_components:
+            return ''
+
+        if is_directory:
+             return path_components[-1]
+        else:
+             return path_components[-2] if len(path_components) > 1 else ''
 
     def get_data_dates(
             self,
