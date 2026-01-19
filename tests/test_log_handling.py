@@ -8,6 +8,8 @@ from dwdown.utils import LogHandler
 class TestLogHandler(unittest.TestCase):
     def setUp(self):
         self.mock_timehandler = MagicMock()
+        self.test_log_dir = "test_logs"
+        self.fixed_time = "2024-01-01 12:00:00"
 
     @patch('dwdown.utils.log_handling.logging.FileHandler')
     @patch('dwdown.utils.log_handling.os.path.join', return_value="mock_path.log")
@@ -54,7 +56,8 @@ class TestLogHandler(unittest.TestCase):
         # Trigger the logger setup logic via instantiation
         LogHandler(
             timehandler=self.mock_timehandler,
-            log_file_path="logs",
+            log_file_path=self.test_log_dir,
+            logger_name="TestLogger",
             log_to_console=True,
             log_to_file=True
         )
@@ -83,8 +86,10 @@ class TestLogHandler(unittest.TestCase):
         # Tests that get_logger() method returns the internal logger instance
         logger_instance = MagicMock()
         mock_get_logger.return_value = logger_instance
-        handler = LogHandler(timehandler=self.mock_timehandler)
+        handler = LogHandler(timehandler=self.mock_timehandler, logger_name="TestLogger")
         self.assertIs(handler.get_logger(), logger_instance)
+        # Verify that getLogger was called with the correct name
+        mock_get_logger.assert_called_with("TestLogger")
 
     @patch('dwdown.utils.log_handling.open', new_callable=mock_open)
     @patch('dwdown.utils.log_handling.logging.getLogger')
@@ -94,11 +99,13 @@ class TestLogHandler(unittest.TestCase):
         mock_get_logger.return_value = logger_instance
         
         # Configure mock timehandler
-        self.mock_timehandler.get_current_date.return_value = "2024-01-01 12:00:00"
+        self.mock_timehandler.get_current_date.return_value = self.fixed_time
 
         handler = LogHandler(
             timehandler=self.mock_timehandler,
-            log_to_file=False
+            log_to_file=False,
+            log_file_path=self.test_log_dir,
+            logger_name="TestLogger"
         )  # to avoid file handler creation logic affecting this test
 
         test_files = ["file1.txt", "file2.txt"]
@@ -107,8 +114,8 @@ class TestLogHandler(unittest.TestCase):
         # The LogHandler replaces chars in timestamp for filename
         # 2024-01-01 12:00:00 -> 2024_01_01_12_00_00
         expected_filename = os.path.normpath(os.path.join(
-            handler._log_file_path,
-            "LogHandler_var_test_category_2024_01_01_12_00_00.log"))
+            self.test_log_dir,
+            f"TestLogger_var_test_category_{self.fixed_time.replace('-', '_').replace(' ', '_').replace(':', '_')}.log"))
 
         mock_open_file.assert_called_once_with(expected_filename, "w", encoding="utf-8")
         handle = mock_open_file()

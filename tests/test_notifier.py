@@ -82,8 +82,8 @@ class TestNotifier(unittest.TestCase):
             mock_post.reset_mock()
 
             # Test sending a message with custom title and priority
-            self.notifier.send_notification("Test message",
-                                            title="Custom Title", priority=10)
+            self.notifier.send_notification(
+                "Test message", title="Custom Title", priority=10)
             mock_post.assert_called_once_with(
                 "http://example.com/message",
                 json={"title": "Custom Title", "message": "Test message",

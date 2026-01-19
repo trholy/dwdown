@@ -47,9 +47,6 @@ def mock_handlers():
         
         # Setup other mocks
         file_instance = MockFileHandler.return_value
-        log_instance = MockLogHandler.return_value
-        date_instance = MockDateHandler.return_value
-        time_instance = MockTimeHandler.return_value
 
         yield {
             "session": MockSessionHandler,
@@ -84,17 +81,7 @@ def downloader(tmp_path, mock_handlers):
 def test_get_data_dates(html_content, downloader):
     responses.add(responses.GET, TEST_URL, body=html_content, status=200)
 
-    # We need to rely on DateHandler.parse_dates for this.
-    # But since we mocked DateHandler, we need to ensure it behaves correctly or use side_effects.
-    # Actually ForecastDownloader.get_data_dates likely calls self.datehandler._parse_dates
-    # If we mocked DateHandler, it returns a Mock.
-    
-    # We should probably UNMOCK DateHandler for logic tests that depend on it?
-    # Or implement a side_effect.
-    
-    # We can configure the mock to return real datetimes.
-    
-    downloader.datehandler._parse_dates.return_value = [
+    downloader._datehandler._parse_dates.return_value = [
         datetime(2023, 1, 1), datetime(2023, 1, 2)
     ]
 
@@ -116,11 +103,11 @@ def test_get_links_filters_correctly(html_content, downloader):
     
     # Mock simple filter to return specific list
     expected_links = ["link1.grib2.bz2"]
-    downloader.filehandler._simple_filename_filter.return_value = expected_links
+    downloader._filehandler._simple_filename_filter.return_value = expected_links
     
     # Mock advanced filter to return pass-through or processed list
     full_urls = [requests.compat.urljoin(TEST_URL, l) for l in expected_links]
-    downloader.filehandler._advanced_filename_filter.return_value = full_urls
+    downloader._filehandler._advanced_filename_filter.return_value = full_urls
     
     links = downloader.get_links(
         prefix="icon-d2_germany",
@@ -132,7 +119,7 @@ def test_get_links_filters_correctly(html_content, downloader):
     
     # get_links returns the result of advanced filter
     assert links == full_urls
-    downloader.filehandler._simple_filename_filter.assert_called()
+    downloader._filehandler._simple_filename_filter.assert_called()
 
 
 @responses.activate
@@ -141,10 +128,10 @@ def test_get_links_no_filtering(html_content, downloader):
     
     # Simulate filter returning input list, but filtering out parent directory (links ending in /)
     # This ensures we count only files, matching the expected 1078 count.
-    downloader.filehandler._simple_filename_filter.side_effect = lambda filenames, **kwargs: [f for f in filenames if not f.endswith('/')]
+    downloader._filehandler._simple_filename_filter.side_effect = lambda filenames, **kwargs: [f for f in filenames if not f.endswith('/')]
     
     # Mock advanced filter to return input (urls)
-    downloader.filehandler._advanced_filename_filter.side_effect = lambda filenames, **kwargs: filenames
+    downloader._filehandler._advanced_filename_filter.side_effect = lambda filenames, **kwargs: filenames
     
     links = downloader.get_links(
         prefix=None,
@@ -164,13 +151,13 @@ def test_get_links_no_filtering(html_content, downloader):
 def test_get_links_delegation(html_content, downloader):
     responses.add(responses.GET, TEST_URL, body=html_content, status=200)
     
-    downloader.filehandler._simple_filename_filter.return_value = []
+    downloader._filehandler._simple_filename_filter.return_value = []
     # advanced filter returns empty list by default mock (MagicMock is iterable? No, need to set it)
-    downloader.filehandler._advanced_filename_filter.return_value = []
+    downloader._filehandler._advanced_filename_filter.return_value = []
     
     downloader.get_links(prefix="test")
     
-    downloader.filehandler._simple_filename_filter.assert_called()
+    downloader._filehandler._simple_filename_filter.assert_called()
 
 
 @responses.activate
@@ -182,9 +169,6 @@ def test_get_links_with_invalid_url(downloader):
 
 
 def test_download_success(downloader, tmp_path):
-    # This test involves threading and file operations.
-    # With mocked handlers, we test flow.
-    
     mock_links = ["http://example.com/file1.grib2"]
     downloader.get_links = MagicMock(return_value=mock_links)
     
@@ -201,11 +185,6 @@ def test_download_success(downloader, tmp_path):
     # Mock session get for the file download
     with responses.RequestsMock() as rsps:
         rsps.add(responses.GET, "http://example.com/file1.grib2", body=b"DATA", status=200)
-        
-        # We assume download_file uses filehandler or just requests.
-        # If it uses requests, responses handles it.
-        # But we need to make sure filehandler._delete_files_safely or similar isn't called improperly.
-        
         downloader.download(check_for_existence=False)
 
     # Verify download logic (internal details: downloaded_files list updated)
@@ -218,4 +197,64 @@ def test_delete(downloader):
     downloader._downloaded_files_paths = ["file1", "file2"]
     downloader.delete()
     
-    downloader.filehandler._delete_files_safely.assert_called_with(["file1", "file2"], "downloaded file")
+    downloader._filehandler._delete_files_safely.assert_called_with(["file1", "file2"], "downloaded file")
+
+
+def test_get_variable_from_link():
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    link = "https://example.com/data/temperature/file.grib"
+    result = ForecastDownloader._get_variable_from_link(link)
+    assert result == "temperature"
+
+
+def test_get_variable_from_link_short_path():
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    link = "https://example.com/file.grib"
+    result = ForecastDownloader._get_variable_from_link(link)
+    assert result == ""
+
+
+def test_set_grid_filter_icosahedral():
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    result = ForecastDownloader._set_grid_filter("icosahedral")
+    assert result == ["icosahedral"]
+
+
+def test_set_grid_filter_regular():
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    result = ForecastDownloader._set_grid_filter("regular")
+    assert result == ["regular"]
+
+
+def test_set_grid_filter_none():
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    result = ForecastDownloader._set_grid_filter(None)
+    assert result == []
+
+
+def test_set_grid_filter_invalid():
+    import pytest
+
+    from dwdown.download.forecast_download import ForecastDownloader
+    
+    with pytest.raises(ValueError):
+        ForecastDownloader._set_grid_filter("invalid")
+
+
+@responses.activate
+def test_get_filenames_from_url(downloader):
+    from lxml import html
+    sample_html = '<html><body><a href="file1.bz2">File1</a><a href="file2.bz2">File2</a></body></html>'
+    responses.add(responses.GET, TEST_URL, body=sample_html, status=200)
+    
+    downloader._xpath_files = './/a/@href'
+    
+    result = downloader._get_filenames_from_url()
+    
+    assert 'file1.bz2' in result
+    assert 'file2.bz2' in result

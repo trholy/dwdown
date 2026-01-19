@@ -1,6 +1,4 @@
-import hashlib
 import os
-import re
 import unittest
 from unittest.mock import MagicMock, call, mock_open, patch
 
@@ -10,12 +8,14 @@ from dwdown.utils.file_handling import FileHandler
 class TestFileHandler(unittest.TestCase):
 
     def setUp(self):
+        self.mock_log_handler = MagicMock()
         self.mock_logger = MagicMock()
+        self.mock_log_handler.get_logger.return_value = self.mock_logger
         self.mock_utilities = MagicMock()
         # Default behavior for _string_to_list to avoid breaking simple filter
         self.mock_utilities._string_to_list.side_effect = lambda x, flatten=False: [x] if isinstance(x, str) else (x if x else [])
         
-        self.handler = FileHandler(logger=self.mock_logger, utilities=self.mock_utilities)
+        self.handler = FileHandler(log_handler=self.mock_log_handler, utilities=self.mock_utilities)
 
     @patch("dwdown.utils.file_handling.os.path.exists")
     @patch("dwdown.utils.file_handling.os.makedirs")
@@ -48,28 +48,29 @@ class TestFileHandler(unittest.TestCase):
 
     @patch("dwdown.utils.file_handling.os.scandir")
     def test__search_directory_finds_files_and_recurse_dirs(self, mock_scandir):
-        # Setup mocks for root directory
+        # Mock a file in the root directory
         file_entry = MagicMock()
         file_entry.is_file.return_value = True
         file_entry.is_dir.return_value = False
         file_entry.path = os.path.normpath("/dir/file.txt")
 
+        # Mock a subdirectory in the root directory
         dir_entry = MagicMock()
         dir_entry.is_file.return_value = False
         dir_entry.is_dir.return_value = True
         dir_entry.path = os.path.normpath("/dir/subdir")
 
-        # Setup mocks for subdirectory
+        # Mock a file inside the subdirectory
         sub_file_entry = MagicMock()
         sub_file_entry.is_file.return_value = True
         sub_file_entry.is_dir.return_value = False
         sub_file_entry.path = os.path.normpath("/dir/subdir/file2.txt")
 
-        # Define behavior of os.scandir based on input path
-        # Normalize paths for comparison
+        # Normalized paths for reliable comparison
         root_dir = os.path.normpath("/dir")
         sub_dir = os.path.normpath("/dir/subdir")
 
+        # Return different directory contents based on the scanned path
         def scandir_side_effect(path):
             path = os.path.normpath(path)
             if path == root_dir:
@@ -80,14 +81,7 @@ class TestFileHandler(unittest.TestCase):
 
         mock_scandir.side_effect = scandir_side_effect
 
-        # Need to configure mock_utilities._flatten_list to just return the list
-        self.mock_utilities._flatten_list.side_effect = lambda x: [item for sublist in x for item in (sublist if isinstance(sublist, list) else [sublist])] 
-        # Actually simplest flattening behavior for test:
-        self.mock_utilities._flatten_list.side_effect = lambda x: [file_entry.path, sub_file_entry.path] 
-        # But wait, search_directory implementation constructs a list of [file, [recursive_results]].
-        # So we need a real flatten implementation or improved mock.
-        
-        # Real implementation:
+        # Flatten nested lists produced by recursive directory traversal
         def flatten_mock(obj):
             if isinstance(obj, list):
                 flat = []
@@ -95,16 +89,19 @@ class TestFileHandler(unittest.TestCase):
                     flat.extend(flatten_mock(item))
                 return flat
             return [obj]
+
         self.mock_utilities._flatten_list.side_effect = flatten_mock
 
+        # Execute directory search with recursion and suffix filtering
         result = self.handler._search_directory("/dir", suffix=".txt")
 
+        # Expected files found in root and subdirectory
         expected = [
             os.path.normpath("/dir/file.txt"),
             os.path.normpath("/dir/subdir/file2.txt")
         ]
 
-        # Use set comparison to avoid order issues if recursion order varies
+        # Compare results ignoring order
         self.assertCountEqual(result, expected)
 
     def test__simple_filename_filter_various_conditions(self):
@@ -117,7 +114,7 @@ class TestFileHandler(unittest.TestCase):
         # Normalize input filenames for the test logic to match
         filenames = [os.path.normpath(f) for f in filenames]
         
-        prefix = "/prefix" # On windows normalized to \prefix
+        prefix = "/prefix"
         suffix = ".txt"
         include_pattern = ["include"]
         exclude_pattern = ["exclude"]
@@ -131,26 +128,7 @@ class TestFileHandler(unittest.TestCase):
         # Filename 1 does not end with suffix => excluded
         # Filename 2's parent dir is skipvar (should be included)
         # Filename 3 matches prefix, suffix, include, exclude pattern => excluded because of exclude
-        
-        filtered = self.handler._simple_filename_filter(
-            filenames,
-            prefix=prefix,
-            suffix=suffix,
-            include_pattern=include_pattern,
-            exclude_pattern=exclude_pattern,
-            skip_time_step_filtering_variables=skip_vars,
-            timesteps=timesteps,
-            norm_path=True # Use norm_path in filter
-        )
-        
-        # Expected:
-        # 0: prefix match? /prefix vs \prefix on windows. 
-        # If we pass normalized specific strings into args, it should work.
-        # But wait, prefix arguments passed as "/prefix" might invoke normpath inside?
-        # FileHandler._simple_filename_filter does filenames normpath, but what about prefix/suffix?
-        # Code says: prefix = prefix or "". No normpath on prefix.
-        # So explicit normpath needed in test args.
-        
+
         if os.name == 'nt':
             prefix = os.path.normpath(prefix)
             
@@ -183,8 +161,7 @@ class TestFileHandler(unittest.TestCase):
             os.path.normpath("/var3/file_3_var3.txt")
         ]
         variables = ["var1", "var3"]
-        filtered = FileHandler._advanced_filename_filter(files,
-                                                         variables=variables)
+        filtered = FileHandler._advanced_filename_filter(files, variables=variables)
         self.assertIn(files[0], filtered)
         self.assertIn(files[2], filtered)
         self.assertNotIn(files[1], filtered)
@@ -199,8 +176,7 @@ class TestFileHandler(unittest.TestCase):
             "var1": [1],
             "var2": [15]
         }
-        filtered = FileHandler._advanced_filename_filter(files,
-                                                         patterns=patterns)
+        filtered = FileHandler._advanced_filename_filter(files, patterns=patterns)
         self.assertIn(files[0], filtered)
         self.assertIn(files[2], filtered)
         self.assertIn(files[1], filtered)  # Because of a logic detail: file appended anyway
@@ -214,9 +190,7 @@ class TestFileHandler(unittest.TestCase):
         ]
         variables = ["var1", "var2"]
         patterns = {"var1": [1], "var2": [15]}
-        filtered = FileHandler._advanced_filename_filter(files,
-                                                         variables=variables,
-                                                         patterns=patterns)
+        filtered = FileHandler._advanced_filename_filter(files, variables=variables, patterns=patterns)
         self.assertIn(files[0], filtered)
         self.assertIn(files[2], filtered)
         self.assertNotIn(files[1], filtered)
@@ -247,10 +221,10 @@ class TestFileHandler(unittest.TestCase):
 
         calls = [call(f) for f in norm_files]
         mock_remove.assert_has_calls(calls, any_order=True)
-        self.handler.logger.info.assert_called_once_with(
+        self.handler._logger.info.assert_called_once_with(
             f"Deleted testfile: {norm_files[0]}"
         )
-        self.handler.logger.warning.assert_called_once_with(
+        self.handler._logger.warning.assert_called_once_with(
             f"Testfile not found: {norm_files[1]}"
         )
 
@@ -282,26 +256,26 @@ class TestFileHandler(unittest.TestCase):
         self.handler._cleanup_empty_dirs(base_path)
 
         mock_rmdir.assert_called_once_with(empty_dir)
-        self.handler.logger.info.assert_called_once_with(
+        self.handler._logger.info.assert_called_once_with(
             f"Deleted directory: {empty_dir}")
 
     @patch("dwdown.utils.file_handling.os.listdir", side_effect=FileNotFoundError)
     @patch("dwdown.utils.file_handling.os.walk", return_value=[(os.path.normpath("/base"), ["dir"], [])])
     def test__cleanup_empty_dirs_handles_file_not_found(self, mock_walk, mock_listdir):
         self.handler._cleanup_empty_dirs("/base")
-        self.handler.logger.warning.assert_called()
+        self.handler._logger.warning.assert_called()
 
     @patch("dwdown.utils.file_handling.os.listdir", side_effect=PermissionError)
     @patch("dwdown.utils.file_handling.os.walk", return_value=[(os.path.normpath("/base"), ["dir"], [])])
     def test__cleanup_empty_dirs_handles_permission_error(self, mock_walk, mock_listdir):
         self.handler._cleanup_empty_dirs("/base")
-        self.handler.logger.error.assert_called()
+        self.handler._logger.error.assert_called()
 
     @patch("dwdown.utils.file_handling.os.listdir", side_effect=OSError("error"))
     @patch("dwdown.utils.file_handling.os.walk", return_value=[(os.path.normpath("/base"), ["dir"], [])])
     def test__cleanup_empty_dirs_handles_os_error(self, mock_walk, mock_listdir):
         self.handler._cleanup_empty_dirs("/base")
-        self.handler.logger.error.assert_called()
+        self.handler._logger.error.assert_called()
 
 
 if __name__ == "__main__":

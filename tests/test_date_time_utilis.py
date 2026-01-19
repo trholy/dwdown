@@ -33,9 +33,10 @@ class TestDateHandler(unittest.TestCase):
     def test_parse_dates_invalid(self):
         # Tests _parse_dates returns empty list and logs info for invalid date strings
         mock_logger = MagicMock()
+        self.handler._logger = mock_logger
         invalid_dates = ["32-Jan-2020-10:00:00", "bad-date"]
         
-        result = self.handler._parse_dates(invalid_dates, logger=mock_logger)
+        result = self.handler._parse_dates(invalid_dates)
         
         self.assertEqual(result, [])
         self.assertTrue(mock_logger.info.called)
@@ -70,36 +71,16 @@ class TestTimeHandler(unittest.TestCase):
         # Test get_current_date returns default formatted date string with zeroed time
         now = datetime(2023, 1, 1, 15, 30)
         mock_datetime.now.return_value = now
-        # Mocking side_effect to behave like real datetime for other calls if needed, 
-        # but here we just need .now()
-        
-        # We need to make sure from dwdown.utils.date_time_utilis.datetime import UTC is handled,
-        # but the test patches datetime class.
-        
         result = self.handler.get_current_date()
-        
-        # Result depends on implementation using utc=True by default calling datetime.now(UTC)
-        # Verify the result format, ignoring internal call details if result is correct string.
-        # But wait, we mocked datetime.now.
-        # If implementation calls datetime.now(UTC), mock_datetime.now(UTC) needs to return our 'now'.
-        
-        # Adjust expectation: if UTC used, now() returns a value.
-        # The formatting logic strips time if time_of_day=False.
-        
         self.assertEqual(result, "01-01-2023-00:00")
 
     @patch("dwdown.utils.date_time_utilis.datetime")
     def test_get_current_date_include_time(self, mock_datetime):
-        # Test get_current_date with time_of_day=False returns date string ending with '-00:00'
-        # Wait, previous test said time_of_day=False (default) returns ...-00:00
-        # This test says ...include_time, but calls with time_of_day=False logic in comments?
-        # Assuming we want to test time_of_day=True?
-        
         now = datetime(2023, 5, 5, 14, 20)
         mock_datetime.now.return_value = now
         
-        result = self.handler.get_current_date(time_of_day=False)
-        self.assertTrue(result.endswith("-00:00"))
+        result = self.handler.get_current_date(time_of_day=True)
+        self.assertTrue(result.endswith("-14:20"))
 
     def test_get_current_date_as_datetime(self):
         # Test get_current_date returns datetime object with hour set to zero when convert_to_str=False
