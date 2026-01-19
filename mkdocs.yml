@@ -14,7 +14,6 @@ nav:
   - Processing Module:
       - DataMerger: processing/DataMerger.md
       - GribFileManager: processing/GribFileManager.md
-      - GribFileManager (Multi): processing/GribFileManagerMulti.md
   - Upload Module:
       - OSUploader: upload/OSUploader.md
   - Utils Module:
