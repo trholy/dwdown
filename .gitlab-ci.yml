@@ -10,7 +10,7 @@ variables:
 test:
   stage: test
   script:
-    - pip install .
+    - pip install .[test]
     - pip install pytest
     - pytest
   only:
