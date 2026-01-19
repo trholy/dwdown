@@ -32,7 +32,7 @@ setup(
         "cfgrib>=0.9.15.0"
     ],
     extras_require={
-        "dev": [
+        "test": [
             "pytest>=7.2",
             "ruff>= 0.9.6",
             "chardet>=5.2.0",
