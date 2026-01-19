@@ -52,6 +52,7 @@ class TestLogHandler(unittest.TestCase):
         # Tests that logger is configured with both file and console handlers when enabled
         logger_instance = MagicMock()
         mock_get_logger.return_value = logger_instance
+        logger_instance.hasHandlers.return_value = False
 
         # Trigger the logger setup logic via instantiation
         LogHandler(
@@ -70,6 +71,10 @@ class TestLogHandler(unittest.TestCase):
     @patch('dwdown.utils.log_handling.logging.getLogger')
     def test_setup_logger_file_error_raises(self, mock_get_logger, mock_path_join, mock_file_handler):
         # Tests that LogHandler raises RuntimeError when file handler creation fails
+        logger_instance = MagicMock()
+        mock_get_logger.return_value = logger_instance
+        logger_instance.hasHandlers.return_value = False
+
         with self.assertRaises(RuntimeError) as context:
             LogHandler(
                 timehandler=self.mock_timehandler,
