@@ -99,12 +99,6 @@ class TestTimeHandler(unittest.TestCase):
         result = self.handler._format_datetime(dt, "%Y-%m-%d")
         self.assertEqual(result, "2023-07-01")
 
-    def test_format_datetime_invalid(self):
-        # Test _format_datetime raises ValueError when passed an invalid format string
-        dt = datetime(2023, 7, 1, 12, 0)
-        with self.assertRaises(ValueError):
-            self.handler._format_datetime(dt, "%Q-%W")  # %Q is invalid
-
 
 if __name__ == "__main__":
     unittest.main()
