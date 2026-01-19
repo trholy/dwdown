@@ -13,9 +13,7 @@ minio_downloader = OSDownloader(
 )
 
 # Download files from MinIO
-minio_downloader.download(
-    prefix=""  # Folder prefix, empty for root or None
-)
+minio_downloader.download()
 
 # Print status after upload
 print("Successfully downloaded files:", minio_downloader.downloaded_files)

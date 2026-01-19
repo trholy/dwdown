@@ -50,7 +50,6 @@ data_editor = DataMerger(
     join_method='inner',
     mapping_dictionary=mapping_dictionary,
     additional_patterns=additional_patterns, # formerly additional_pattern_selection
-
 )
 
 df = data_editor.merge(
@@ -58,3 +57,5 @@ df = data_editor.merge(
     variables=variables
 )
 print("Processed DataFrame:", df)
+
+df.to_csv('processed_dataframe.csv')
