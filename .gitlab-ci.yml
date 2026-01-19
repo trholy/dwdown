@@ -20,22 +20,7 @@ pages:
   stage: deploy
   script:
     - pip install mkdocs mkdocs-material
-    # Ensure the docs directory exists
-    - mkdir -p docs
-    - mkdir -p docs/download
-    - mkdir -p docs/img
-    - mkdir -p docs/notify
-    - mkdir -p docs/processing
-    - mkdir -p docs/tools
-    - mkdir -p docs/upload
-    # Copy all Markdown files and images into the docs directory
-    - cp -r documentation/download/. docs/download
-    - cp -r img/. docs/img
-    - cp -r documentation/notify/. docs/notify
-    - cp -r documentation/processing/. docs/processing
-    - cp -r documentation/tools/. docs/tools
-    - cp -r documentation/upload/. docs/upload
-    - cp README.md docs/
+    - cp README.md docs/index.md
     # Build MkDocs site
     - mkdocs build
     - mv site public

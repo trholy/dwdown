@@ -3,19 +3,29 @@ theme:
   name: material
 
 nav:
-  - Home: README.md
-  - Downloader Module:
-      - DWDDownloader: download/DWDDownloader.md
-      - MinioDownloader: download/MinioDownloader.md
-  - Uploader Module:
-      - MinioUploader: upload/MinioUploader.md
+  - Home: index.md
+  - Data Module:
+      - MappingStore: data/MappingStore.md
+  - Download Module:
+      - ForecastDownloader: download/ForecastDownloader.md
+      - OSDownloader: download/OSDownloader.md
+  - Notify Module:
+      - Notifier: notify/Notifier.md
   - Processing Module:
-      - DataEditor: processing/DataEditor.md
-      - DataProcessor: processing/DataProcessor.md
-  - Notifier: notify/Notifier.md
-  - Tools: tools/functions.md
+      - DataMerger: processing/DataMerger.md
+      - GribFileManager: processing/GribFileManager.md
+      - GribFileManager (Multi): processing/GribFileManagerMulti.md
+  - Upload Module:
+      - OSUploader: upload/OSUploader.md
+  - Utils Module:
+      - DataFrameOperator: utils/DataFrameOperator.md
+      - DateTimeUtils: utils/DateTimeUtils.md
+      - FileHandler: utils/FileHandler.md
+      - LogHandler: utils/LogHandler.md
+      - NetworkHandlers: utils/NetworkHandlers.md
+      - OSHandler: utils/OSHandler.md
+      - Utilities: utils/Utilities.md
 
-# Ensure images are served correctly
 markdown_extensions:
   - attr_list
   - md_in_html
