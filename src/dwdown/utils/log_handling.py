@@ -61,6 +61,10 @@ class LogHandler:
         logger = logging.getLogger(self._logger_name)
         logger.setLevel(logging.INFO)
 
+        # check if logger already has handlers
+        if logger.hasHandlers():
+            return logger
+
         # Set up console handler if enabled
         if self._log_to_console:
             console_handler = logging.StreamHandler()
@@ -68,7 +72,6 @@ class LogHandler:
             logger.addHandler(console_handler)
 
         # Set up file handler if enabled
-        time_stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         time_stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         if self._log_to_file:
             log_file_name = f"{self._logger_name}_{time_stamp}.log"
