@@ -188,7 +188,7 @@ class ForecastDownloader:
             for date in fixed_dates]
 
         parsed_dates = self._datehandler._parse_dates(
-            cleaned_dates, date_pattern, self._logger
+            cleaned_dates, date_pattern
         )
 
         return min(parsed_dates), max(parsed_dates)
