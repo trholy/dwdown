@@ -97,7 +97,7 @@ TimeHandler(date_format: str | None = None)
 #### Parameters
 
 - `date_format` : `str | None`, default=`None`
-  - The default date format to use. Defaults to "%d-%m-%Y-%H:%M".
+  - The default date format to use. Defaults to "%Y-%m-%d-%H:%M".
 
 ### Methods
 
@@ -105,7 +105,7 @@ TimeHandler(date_format: str | None = None)
 
 ```python
 get_current_date(
-    utc: bool = True,
+    utc: bool = False,
     time_of_day: bool = False,
     date_format: str | None = None,
     convert_to_str: bool = True
@@ -116,7 +116,7 @@ Gets the current date in a formatted string or datetime object.
 
 #### Parameters
 
-- `utc` : `bool`, default=`True`
+- `utc` : `bool`, default=`False`
   - Whether to use UTC time.
 - `time_of_day` : `bool`, default=`False`
   - Whether to include the time of day.
