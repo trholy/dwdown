@@ -271,6 +271,25 @@ class OSUploader:
 
         self._log_summary()
 
+    def count_existing_files(
+            self,
+            bucket_name: str,
+            remote_prefix: str | None = None
+    ) -> int:
+        """
+        Counts existing objects in the specified bucket under a given prefix.
+
+        :param bucket_name: Name of the bucket.
+        :param remote_prefix: Prefix to filter objects by.
+        :return: Number of objects found.
+        :raises S3Error: If there is an error fetching the files.
+        """
+        num_existing_objects = self._oshandler._count_existing_files(
+            bucket_name=bucket_name, remote_prefix=remote_prefix
+        )
+
+        return num_existing_objects
+
     def delete(self) -> None:
         """
         Deletes local files after successful upload.

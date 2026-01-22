@@ -97,6 +97,37 @@ class OSHandler:
 
         return existing_files
 
+    def _count_existing_files(
+            self,
+            bucket_name: str,
+            remote_prefix: str | None = None
+    ) -> int:
+        """
+        Counts existing objects in the specified bucket under a given prefix.
+
+        :param bucket_name: Name of the bucket.
+        :param remote_prefix: Prefix to filter objects by.
+        :return: Number of objects found.
+        :raises S3Error: If there is an error fetching the files.
+        """
+        prefix = remote_prefix or ""
+
+        try:
+            objects = self._client.list_objects(
+                bucket_name=bucket_name,
+                prefix=prefix,
+                recursive=True,
+            )
+        except S3Error:
+            self._logger.exception(
+                "Failed to count existing files in bucket '%s' with prefix '%s'",
+                bucket_name,
+                prefix,
+            )
+            raise
+
+        return sum(1 for _ in objects)
+
     def _verify_file_integrity(
             self,
             local_file_path: str| None = None,

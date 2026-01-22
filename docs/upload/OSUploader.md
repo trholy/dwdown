@@ -139,6 +139,34 @@ Uploads files from the local path to the specified bucket.
 - `remote_prefix` : `str`, default=`""`
   - Prefix for the folder in the bucket.
 
+#### `_count_existing_files`
+
+```python
+_count_existing_files(
+    bucket_name: str,
+    remote_prefix: str | None = None
+) -> int
+```
+
+Counts existing objects in the specified bucket under a given prefix.
+
+#### Parameters
+
+- `bucket_name` : `str`
+  - The name of the bucket.
+-`remote_prefix` : `str | None`, default=`None`
+  - The prefix to filter objects by. If `None`, all objects in the bucket are counted.
+
+#### Returns
+
+- `int`
+  -  The number of objects found under the specified prefix.
+
+#### Raises
+
+- `S3Error`
+  - If there is an error while fetching or listing objects from the bucket.
+
 #### `delete`
 
 ```python

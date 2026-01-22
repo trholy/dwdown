@@ -67,6 +67,34 @@ Fetches existing files from the specified bucket and prefix.
 - `dict[str, str]`
   - A dictionary of object names and their ETags.
 
+#### `_count_existing_files`
+
+```python
+_count_existing_files(
+    bucket_name: str,
+    remote_prefix: str | None = None
+) -> int
+```
+
+Counts existing objects in the specified bucket under a given prefix.
+
+#### Parameters
+
+- `bucket_name` : `str`
+  - The name of the bucket.
+-`remote_prefix` : `str | None`, default=`None`
+  - The prefix to filter objects by. If `None`, all objects in the bucket are counted.
+
+#### Returns
+
+- `int`
+  -  The number of objects found under the specified prefix.
+
+#### Raises
+
+- `S3Error`
+  - If there is an error while fetching or listing objects from the bucket.
+
 #### `_verify_file_integrity`
 
 ```python
