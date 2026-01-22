@@ -134,7 +134,8 @@ class TimeHandler:
             now = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if convert_to_str:
-            return self._format_datetime(now, date_format)
+            now = self._format_datetime(now, date_format)
+            return now.replace(':', '-').replace('-', '_')
 
         return now
 
