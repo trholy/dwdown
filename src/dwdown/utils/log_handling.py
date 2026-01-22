@@ -62,7 +62,7 @@ class LogHandler:
         logger.setLevel(logging.INFO)
 
         # check if logger already has handlers
-        if logger.hasHandlers():
+        if logger.handlers:
             return logger
 
         # Set up console handler if enabled
