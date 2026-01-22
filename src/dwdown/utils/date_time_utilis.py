@@ -109,7 +109,7 @@ class TimeHandler:
 
         :param date_format: The default date format to use.
         """
-        self._date_format = date_format or "%d-%m-%Y-%H:%M"
+        self._date_format = date_format or "%Y-%m-%d-%H:%M"
 
     def get_current_date(
             self,
