@@ -113,7 +113,7 @@ class TimeHandler:
 
     def get_current_date(
             self,
-            utc: bool = True,
+            utc: bool = False,
             time_of_day: bool = False,
             date_format: str | None = None,
             convert_to_str: bool = True
