@@ -72,7 +72,7 @@ class TestTimeHandler(unittest.TestCase):
         now = datetime(2023, 1, 1, 15, 30)
         mock_datetime.now.return_value = now
         result = self.handler.get_current_date()
-        self.assertEqual(result, "01-01-2023-00:00")
+        self.assertEqual(result, "2023_01_01_00_00")
 
     @patch("dwdown.utils.date_time_utilis.datetime")
     def test_get_current_date_include_time(self, mock_datetime):
@@ -80,7 +80,7 @@ class TestTimeHandler(unittest.TestCase):
         mock_datetime.now.return_value = now
         
         result = self.handler.get_current_date(time_of_day=True)
-        self.assertTrue(result.endswith("-14:20"))
+        self.assertTrue(result.endswith("_14_20"))
 
     def test_get_current_date_as_datetime(self):
         # Test get_current_date returns datetime object with hour set to zero when convert_to_str=False
