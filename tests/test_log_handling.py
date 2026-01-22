@@ -53,6 +53,7 @@ class TestLogHandler(unittest.TestCase):
         logger_instance = MagicMock()
         mock_get_logger.return_value = logger_instance
         logger_instance.hasHandlers.return_value = False
+        logger_instance.handlers = []
 
         # Trigger the logger setup logic via instantiation
         LogHandler(
@@ -74,6 +75,7 @@ class TestLogHandler(unittest.TestCase):
         logger_instance = MagicMock()
         mock_get_logger.return_value = logger_instance
         logger_instance.hasHandlers.return_value = False
+        logger_instance.handlers = []
 
         with self.assertRaises(RuntimeError) as context:
             LogHandler(
