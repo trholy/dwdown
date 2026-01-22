@@ -122,7 +122,7 @@ class OSUploader:
                 continue
 
             relative_path = os.path.relpath(local_file_path, self.files_path)
-            remote_path = urljoin(remote_prefix, relative_path)
+            remote_path = f"{remote_prefix.rstrip('/')}/{relative_path.replace(os.sep, '/')}"
             files_to_upload.append((local_file_path, remote_path, local_hash))
 
         return files_to_upload
