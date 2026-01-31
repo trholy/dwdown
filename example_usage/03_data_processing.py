@@ -1,5 +1,6 @@
 from dwdown.processing import DataMerger, GribFileManager
 
+
 # Initialize the GribFileManager (formerly DataProcessor)
 processor = GribFileManager(
     files_path="download_files",  # Path for files to process (formerly search_path)
