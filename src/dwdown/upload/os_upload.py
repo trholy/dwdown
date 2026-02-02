@@ -1,7 +1,6 @@
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.parse import urljoin
 
 from dwdown.utils.date_time_utilis import DateHandler, TimeHandler
 from dwdown.utils.file_handling import FileHandler
@@ -250,24 +249,62 @@ class OSUploader:
         )
 
         # Step 3: Parallel Upload with Real-time Logging
+        # Keep track of all potential uploads to map back for retries
+        # dict[local_file_path, (remote_path, local_md5)]
+        upload_map = {local: (remote, md5) for local, remote, md5 in files_to_upload}
+
         with ThreadPoolExecutor(max_workers=self._n_jobs) as executor:
             futures = {
                 executor.submit(
-                    self._upload_file, local, remote, local_md5): (local, remote)
+                    self._upload_file, local, remote, local_md5): local
                 for local, remote, local_md5 in files_to_upload
             }
 
             for future in as_completed(futures):
-                local_file_path, _remote_path = futures[future]
+                local_file_path = futures[future]
                 try:
                     if future.result():
                         self.uploaded_files.append(local_file_path)
                     else:
-                        self.corrupted_files.append(local_file_path)
+                        # Added to corrupted_files inside _upload_file, but we verify here
+                        if local_file_path not in self.corrupted_files:
+                             self.corrupted_files.append(local_file_path)
                 except Exception as e:
                     self._logger.error(
                         f"Error uploading {local_file_path}: {e}"
                     )
+                    if local_file_path not in self.corrupted_files:
+                        self.corrupted_files.append(local_file_path)
+
+        # Step 4: Retry Failed Uploads
+        if self._retry > 0 and self.corrupted_files:
+            self._logger.warning(
+                f"Retrying {len(self.corrupted_files)}"
+                f" failed uploads up to {self._retry} times..."
+            )
+
+            # Create a copy to iterate safely
+            for local_file_path in list(self.corrupted_files):
+                if local_file_path not in upload_map:
+                    continue
+                
+                remote_path, local_md5 = upload_map[local_file_path]
+                retry_count = 0
+                
+                while retry_count < self._retry:
+                    try:
+                        # Add a small delay for retries
+                        time.sleep(1) 
+                        if self._upload_file(local_file_path, remote_path, local_md5):
+                            self.uploaded_files.append(local_file_path)
+                            self.corrupted_files.remove(local_file_path)
+                            break
+                        retry_count += 1
+                    except Exception as e:
+                        self._logger.error(
+                             f"Retry {retry_count} failed for {local_file_path}: {e}"
+                        )
+                        retry_count += 1
 
         self._log_summary()
 
