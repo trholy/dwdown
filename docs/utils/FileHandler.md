@@ -78,7 +78,9 @@ _simple_filename_filter(
     exclude_pattern: list[str] | None = None,
     skip_time_step_filtering_variables: list[str] | None = None,
     timesteps: list[str] | None = None,
-    norm_path: bool = True
+    norm_path: bool = True,
+    use_all_for_include: bool = True,
+    mock_time_steps: bool = False
 ) -> list[str]
 ```
 
@@ -102,11 +104,69 @@ Filters filenames based on specified criteria.
   - List of timesteps to include.
 - `norm_path` : `bool`, default=`True`
   - Whether to normalize paths.
+- `use_all_for_include` : `bool`, default=`True`
+  - Check if filename matches patterns using either 'all' or 'any' logic.
+- `mock_time_steps` : `bool`, default=`False`
+  - If `True`, returns `True` regardless of timesteps.
 
 #### Returns
 
 - `list[str]`
   - List of filtered filenames.
+
+#### `_switchable_pattern_check`
+
+```python
+@staticmethod
+_switchable_pattern_check(
+    filename: str,
+    patterns: list[str] | None,
+    use_all: bool = True
+) -> bool
+```
+
+Check if filename matches patterns using either 'all' or 'any' logic.
+
+#### Parameters
+
+- `filename` : `str`
+  - The filename to check against patterns.
+- `patterns` : `list[str] | None`
+  - List of pattern strings to search for in filename.
+- `use_all` : `bool`, default=`True`
+  - If `True`, all patterns must be present in filename. If `False`, at least one pattern must be present.
+
+#### Returns
+
+- `bool`
+  - `True` if the filename matches the pattern requirements, `False` otherwise.
+
+#### `_mock_time_steps`
+
+```python
+@staticmethod
+_mock_time_steps(
+    filename: str,
+    timesteps: list[str] | None,
+    mock_time_steps: bool = False
+) -> bool
+```
+
+Checks if filename matches any of the provided timesteps or if mocking is enabled.
+
+#### Parameters
+
+- `filename` : `str`
+  - The filename to check.
+- `timesteps` : `list[str] | None`
+  - List of timesteps to check against.
+- `mock_time_steps` : `bool`, default=`False`
+  - If `True`, returns `True` regardless of timesteps.
+
+#### Returns
+
+- `bool`
+  - `True` if matches or mocked, `False` otherwise.
 
 #### `_advanced_filename_filter`
 

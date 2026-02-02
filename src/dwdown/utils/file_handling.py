@@ -82,6 +82,37 @@ class FileHandler:
 
         return self._utilities._flatten_list(filenames)
 
+    @staticmethod
+    def _switchable_pattern_check(filename: str, patterns:list[str] | None, use_all: bool = True):
+        """
+        Check if filename matches patterns using either 'all' or 'any' logic.
+        :param filename: The filename to check against patterns
+        :param patterns: List of pattern strings to search for in filename
+        :param use_all: If True, all patterns must be present in filename.
+                       If False, at least one pattern must be present in filename.
+                       Defaults to True (all patterns required).
+        :return: True if the filename matches the pattern requirements, False otherwise
+        """
+        return all(pattern in filename for pattern in patterns) \
+            if use_all \
+            else any(pattern in filename for pattern in patterns)
+
+    @staticmethod
+    def _mock_time_steps(
+            filename: str,
+            timesteps: list[str] | None,
+            mock_time_steps: bool = False
+    ):
+        """
+        Determines whether a filename passes time step filtering.
+
+        :param filename: the filename to check against patterns.
+        :param timesteps: List of time step patterns to search for.
+        :param mock_time_steps: If True, bypasses time step filtering entirely.
+        :return: True if filename passes filtering, False otherwise.
+        """
+        return True if mock_time_steps else any(ts in filename for ts in timesteps)
+
     def _simple_filename_filter(
             self,
             filenames: list[str],
@@ -91,7 +122,9 @@ class FileHandler:
             exclude_pattern: list[str] | None = None,
             skip_time_step_filtering_variables: list[str] | None = None,
             timesteps: list[str] | None = None,
-            norm_path: bool = True
+            norm_path: bool = True,
+            use_all_for_include: bool = True,
+            mock_time_steps: bool = False
     ) -> list[str]:
         """
         Filters filenames based on specified criteria.
@@ -102,6 +135,8 @@ class FileHandler:
         :param include_pattern: List of patterns to include in filenames.
         :param exclude_pattern: List of patterns to exclude from filenames.
         :param skip_time_step_filtering_variables: List of variables to skip time step filtering.
+        :param use_all_for_include: Check if filename matches patterns using either 'all' or 'any' logic.
+        :param mock_time_steps (bool): Bypass time step filtering completely (default: False)
         :return: List of filtered filenames.
         """
         include_pattern = self._utilities._string_to_list(include_pattern)
@@ -118,8 +153,8 @@ class FileHandler:
             filename for filename in filenames
             if filename.startswith(prefix)
                and filename.endswith(suffix)
-               and all(pattern in filename for pattern in include_pattern)
-               and any(ts in filename for ts in timesteps)
+               and self._switchable_pattern_check(filename, include_pattern, use_all_for_include)
+               and self._mock_time_steps(filename, timesteps, mock_time_steps)
                and not any(pattern in filename for pattern in exclude_pattern)
         ]
 
