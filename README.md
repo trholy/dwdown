@@ -5,6 +5,8 @@
 ## Features
 
 - **ForecastDownloader**: Fetch weather forecast data from the DWD open data server.
+- **HistoricalDownloader**: Fetch historical observation data from the DWD open data server.
+- **MOSMIX_Downloader**: Fetch MOSMIX forecast data from the DWD open data server.
 - **OSDownloader**: Download files from a S3 compatible / [MinIO object storage server](https://github.com/minio/minio).
 - **OSUploader**: Upload downloaded data to a S3 compatible / MinIO object storage server with parallel uploads and data integrity checks.
 - **GribFileManager**: Extract BZ2 archives and convert GRIB2 files to CSV format.
@@ -29,12 +31,100 @@ Read the documentation on [GitLab Pages](https://to82lod.gitpages.uni-jena.de/dw
 
 ## Usage
 
-### ForecastDownloader: Download Data from DWD
+### HistoricalDownloader: Fetch historical observation data from the DWD open data server.
+
+```python
+from dwdown.download import HistoricalDownloader
+
+
+# Initialize HistoricalDownloader
+scraper = HistoricalDownloader(
+    base_url=None,                       # Base URL for historical data (to be set)
+    files_path=None,                     # Path for downloaded files
+    extracted_files_path=None,           # Path for extracted files
+    log_files_path="log_files",          # Path for log files
+    encoding=None,                       # File encoding (to be set)
+    station_description_file_name=None,  # Station description filename
+    delay=1,                             # 1 second delay between downloads
+    retry=0,                             # Don't retry failed downloads
+    timeout=30                           # 30 second timeout for requests
+)
+
+# Download station descriptions
+scraper.download_station_description()
+
+# Read station descriptions
+station_descriptions = scraper.read_station_description()
+print(station_descriptions)
+
+# Get download links for specific stations
+links = scraper.get_links(
+    station_ids=['00001','00003'],   # Get links for stations 1 and 3
+    prefix="tageswerte_KL",          # File prefix for daily weather data
+    suffix="_hist.zip"               # File suffix for historical zip files
+)
+print(links)
+
+# Download files
+scraper.download(check_for_existence=True)
+
+# Unpack ZIP files
+scraper.extract(unpack_hist_data_only=True, check_for_existence=True)
+
+# Read and save data as CSV
+df = scraper.read_data(save_as_csv=True)
+print(df)
+```
+
+### HistoricalDownloader: Fetch MOSMIX forecast data from the DWD open data server.
+
+```python
+from dwdown.download import MOSMIX_Downloader
+
+
+# Initialize MOSMIX_Downloader
+scraper = MOSMIX_Downloader(
+    mosmix_type="MOSMIX_L",              
+    base_url=None,                       # Base URL constructed automatically based on type
+    files_path=None,                     # Path for downloaded files (defaults to download_files)
+    extracted_files_path=None,           # Path for extracted files (defaults to extracted_files)
+    log_files_path="log_files",          # Path for log files
+    delay=1,                             # 1 second delay between downloads
+    retry=0,                             # Don't retry failed downloads
+    timeout=30                           # 30 second timeout for requests
+)
+
+# Get download links for specific stations
+links = scraper.get_links(
+    station_ids=['01001']
+)
+print(f"Found {len(links)} links:", links)
+
+# Download files
+scraper.download(check_for_existence=True)
+
+# Unpack KMZ files
+scraper.extract(check_for_existence=True)
+
+# Read and save data as CSV
+data = scraper.read_data(save_as_csv=True)
+
+# Print result summary
+if data:
+    for filename, df in data.items():
+        print(f"Processed {filename}:")
+        print(df.head())
+else:
+    print("No data processed.")
+```
+
+### ForecastDownloader: Fetch weather forecast data from the DWD open data server.
 
 The `ForecastDownloader` class allows you to download weather forecast files from the DWD open data server.
 
 ```python
 from dwdown.download import ForecastDownloader
+
 
 variables = [
     'aswdifd_s',
@@ -47,10 +137,10 @@ for variable in variables:
     # Initialize ForecastDownloader
     dwd_downloader = ForecastDownloader(
         url=f"https://opendata.dwd.de/weather/nwp/icon-d2/grib/09/{variable}/",
-        retry=0,  # Dont retry failed downloads
+        retry=0,  # Dont retry failed downloads (formerly restart_failed_downloads)
         delay=0.1,  # 0.1 seconds delay between downloads
-        n_jobs=4,  # Use 4 concurrent workers
-        files_path=f"download_files/09/{variable}",  # Path for downloaded files
+        n_jobs=4,  # Use 4 concurrent workers (formerly workers)
+        files_path=f"download_files/09/{variable}",  # Path for downloaded files (formerly download_path)
         log_files_path="log_files"  # Path for log files
     )
 
@@ -72,6 +162,7 @@ The `OSUploader` class helps upload files to a [MinIO object storage server](htt
 ```python
 from dwdown.upload import OSUploader
 
+
 # Initialize OSUploader
 uploader = OSUploader(
     endpoint="your-minio-sever.com",
@@ -86,8 +177,7 @@ uploader = OSUploader(
 
 # Upload files to MinIO
 uploader.upload()
-# Optional: Delete local files after upload
-# uploader.delete()
+uploader.delete()
 
 # Print status after upload
 print("Successfully uploaded files:", uploader.uploaded_files)
@@ -100,6 +190,7 @@ The `OSDownloader` class helps you download files from a [MinIO object storage s
 
 ```python
 from dwdown.download import OSDownloader
+
 
 # Initialize OSDownloader
 minio_downloader = OSDownloader(
@@ -116,7 +207,7 @@ minio_downloader = OSDownloader(
 # Download files from MinIO
 minio_downloader.download()
 
-# Print status after download
+# Print status after upload
 print("Successfully downloaded files:", minio_downloader.downloaded_files)
 print("Download might be corrupted:", minio_downloader.corrupted_files)
 ```
@@ -128,10 +219,11 @@ The `GribFileManager` handles decompression and conversion of GRIB2 files, while
 ```python
 from dwdown.processing import DataMerger, GribFileManager
 
-# Initialize the GribFileManager
+
+# Initialize the GribFileManager (formerly DataProcessor)
 processor = GribFileManager(
-    files_path="download_files",  # Path for files to process
-    extracted_files_path="extracted_files",  # Path for extracted files
+    files_path="download_files",  # Path for files to process (formerly search_path)
+    extracted_files_path="extracted_files",  # Path for extracted files (formerly extraction_path)
     converted_files_path="csv_files",  # Path for CSV files
 )
 
@@ -168,7 +260,7 @@ additional_patterns = {
     "smi": [0, 9, 27],
 }
 
-# Initialize DataMerger
+# Initialize DataMerger (formerly DataEditor)
 data_editor = DataMerger(
     files_path='csv_files/09/',
     required_columns={
@@ -176,7 +268,7 @@ data_editor = DataMerger(
     },
     join_method='inner',
     mapping_dictionary=mapping_dictionary,
-    additional_patterns=additional_patterns,
+    additional_patterns=additional_patterns, # formerly additional_pattern_selection
 )
 
 df = data_editor.merge(
@@ -195,6 +287,7 @@ The `Notifier` class keeps you informed about the status of downloads, uploads, 
 ```python
 from minio import Minio
 from dwdown.notify import Notifier
+
 
 # Initialize Notifier
 notifier = Notifier(
@@ -251,6 +344,8 @@ The package structure is as follows:
 │   │   └── MappingStore.md
 │   ├── download
 │   │   ├── ForecastDownloader.md
+│   │   ├── HistoricalDownloader.md
+│   │   ├── MosmixDownloader.md
 │   │   └── OSDownloader.md
 │   ├── notify
 │   │   └── Notifier.md
@@ -268,11 +363,12 @@ The package structure is as follows:
 │       ├── OSHandler.md
 │       └── Utilities.md
 ├── example_usage
-│   ├── dwd_processing.py
-│   ├── dwd_scraper.py
-│   ├── minio_downloader.py
-│   ├── minio_uploader.py
-│   └── notifier.py
+│   ├── 00_dwd_forecast_scraper.py
+│   ├── 00b_dwd_hist-station-data_scraper.py
+│   ├── 00c_dwd_mosmix_scraper.py
+│   ├── 01_os_uploader.py
+│   ├── 02_os_downloader.py
+│   ├── 03_data_processing.py
 ├── img
 │   └── example_workflow.png
 ├── mkdocs.yml
@@ -287,6 +383,8 @@ The package structure is as follows:
 │       ├── download
 │       │   ├── __init__.py
 │       │   ├── forecast_download.py
+│       │   ├── historical_download.py
+│       │   ├── mosmix_downloader.py
 │       │   └── os_download.py
 │       ├── notify
 │       │   ├── __init__.py
@@ -294,7 +392,7 @@ The package structure is as follows:
 │       ├── processing
 │       │   ├── __init__.py
 │       │   ├── data_merging.py
-│       │   ├── grib_data_handling.py
+│       │   └── grib_data_handling.py
 │       ├── upload
 │       │   ├── __init__.py
 │       │   └── os_upload.py
@@ -307,18 +405,20 @@ The package structure is as follows:
 │           ├── log_handling.py
 │           ├── network_handling.py
 │           └── os_handling.py
-├── tests
-│   ├── test_ForecastDownloader.py
-│   ├── test_OSDownloader.py
-│   ├── test_OSUploader.py
-│   ├── test_date_time_utilis.py
-│   ├── test_file_handling.py
-│   ├── test_log_handling.py
-│   ├── test_mapping.py
-│   ├── test_network_handling.py
-│   ├── test_notifier.py
-│   ├── test_processing.py
-│   └── test_utils.py
+└── tests
+    ├── test_ForecastDownloader.py
+    ├── test_HistoricalDownloader.py
+    ├── test_MOSMIX_Downloader.py
+    ├── test_OSDownloader.py
+    ├── test_OSUploader.py
+    ├── test_date_time_utilis.py
+    ├── test_file_handling.py
+    ├── test_log_handling.py
+    ├── test_mapping.py
+    ├── test_network_handling.py
+    ├── test_notifier.py
+    ├── test_processing.py
+    └── test_utils.py
 ```
 
 ## License
