@@ -276,23 +276,82 @@ class OSDownloader:
             f"Starting download of {len(files_to_download)} files...")
 
         # Parallel Download with Real-time Logging
+        # Keep track of all potential downloads to map back for retries
+        # dict[local_file_path, (remote_path, remote_hash)]
+        download_map = {local: (remote, r_hash) for local, remote, r_hash in files_to_download}
+
         with ThreadPoolExecutor(max_workers=self._n_jobs) as executor:
             futures = {
                 executor.submit(
                     self._download_file, local, remote,
-                    check_for_existence, remote_hash): (local, remote)
+                    check_for_existence, remote_hash): local
                 for local, remote, remote_hash in files_to_download
             }
 
             for future in as_completed(futures):
-                _local_file_path, remote_path = futures[future]
+                local_file_path = futures[future]
+                
+                # Retrieve remote_path from map since we only store local as key for future
+                if local_file_path in download_map:
+                    remote_path = download_map[local_file_path][0]
+                else:
+                    self._logger.error(
+                        f"Could not find metadata for {local_file_path} in download map."
+                    )
+                    continue
+
                 try:
                     if future.result():
                         self.downloaded_files.append(remote_path)
                     else:
-                        self.corrupted_files.append(remote_path)
+                        if remote_path not in self.corrupted_files:
+                             self.corrupted_files.append(remote_path)
                 except Exception as e:
                     self._logger.error(f"Error downloading {remote_path}: {e}")
+                    if remote_path not in self.corrupted_files:
+                        self.corrupted_files.append(remote_path)
+        
+        # Step 4: Retry Failed Downloads
+        if self._retry > 0 and self.corrupted_files:
+            self._logger.warning(
+                f"Retrying {len(self.corrupted_files)}"
+                f" failed downloads up to {self._retry} times..."
+            )
+
+            # Create a copy to iterate safely
+            for remote_path in list(self.corrupted_files):
+                target_local_path = None
+                target_remote_hash = None
+                
+                for local, (remote, r_hash) in download_map.items():
+                    if remote == remote_path:
+                        target_local_path = local
+                        target_remote_hash = r_hash
+                        break
+                
+                if not target_local_path:
+                    self._logger.error(
+                        f"Could not find local path for retry of {remote_path}"
+                    )
+                    continue
+
+                retry_count = 0
+                while retry_count < self._retry:
+                    try:
+                        # Add a small delay for retries
+                        time.sleep(1) 
+                        if self._download_file(
+                            target_local_path, remote_path, check_for_existence, target_remote_hash
+                        ):
+                            self.downloaded_files.append(remote_path)
+                            self.corrupted_files.remove(remote_path)
+                            break
+                        retry_count += 1
+                    except Exception as e:
+                        self._logger.error(
+                             f"Retry {retry_count} failed for {remote_path}: {e}"
+                        )
+                        retry_count += 1
 
         # Final summary logs
         self._log_summary()

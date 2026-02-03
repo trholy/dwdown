@@ -105,3 +105,82 @@ class TestOSDownloader:
         
         downloader._filehandler._delete_files_safely.assert_called_with(['file1.csv', 'file2.csv'], 'downloaded file')
         downloader._filehandler._cleanup_empty_dirs.assert_called_with('downloads')
+
+    def test_download_retry_success(self, downloader):
+        # Configure downloader with retries
+        downloader._retry = 2
+        
+        # Mock dependencies
+        downloader._utilities = MagicMock()
+        downloader._oshandler._fetch_existing_files.return_value = {"f1.csv": "h1"}
+        downloader._utilities._string_to_list.side_effect = lambda x: x if isinstance(x, list) else [x] if x else []
+        downloader._datehandler._process_timesteps.return_value = None
+        downloader._filehandler._simple_filename_filter.return_value = ["f1.csv"]
+        downloader._filehandler._advanced_filename_filter.return_value = ["f1.csv"]
+        
+        # Mock build_download_list
+        download_list = [("local/f1.csv", "f1.csv", "h1")]
+        downloader._build_download_list = MagicMock(return_value=download_list)
+        
+        # Mock _download_file logic for RETRIES only
+        # Initial call is mocked via future.result() returning False
+        # Retries: Retry 1 (Fail), Retry 2 (Success)
+        downloader._download_file = MagicMock(side_effect=[False, True])
+        
+        with patch('dwdown.download.os_download.ThreadPoolExecutor') as MockExecutor:
+            mock_executor_instance = MockExecutor.return_value
+            mock_executor_instance.__enter__.return_value = mock_executor_instance
+            mock_future = MagicMock()
+            mock_executor_instance.submit.return_value = mock_future
+            
+            # Simulate initial failure in thread pool
+            with patch('dwdown.download.os_download.as_completed', return_value=[mock_future]):
+                mock_future.result.return_value = False # Initial failure
+                
+                # Run download
+                downloader.download()
+                
+                # Verify calls: 0 initial (mocked) + 2 retries = 2 calls
+                assert downloader._download_file.call_count == 2
+                
+                # Verify result
+                assert "f1.csv" in downloader.downloaded_files
+                assert "f1.csv" not in downloader.corrupted_files
+
+    def test_download_retry_fail(self, downloader):
+        # Configure downloader with retries
+        downloader._retry = 2
+        
+        # Mock dependencies
+        downloader._utilities = MagicMock()
+        downloader._oshandler._fetch_existing_files.return_value = {"f1.csv": "h1"}
+        downloader._utilities._string_to_list.side_effect = lambda x: x if isinstance(x, list) else [x] if x else []
+        downloader._datehandler._process_timesteps.return_value = None
+        downloader._filehandler._simple_filename_filter.return_value = ["f1.csv"]
+        downloader._filehandler._advanced_filename_filter.return_value = ["f1.csv"]
+        
+        # Mock build_download_list
+        download_list = [("local/f1.csv", "f1.csv", "h1")]
+        downloader._build_download_list = MagicMock(return_value=download_list)
+        
+        # Mock _download_file to fail always in retries
+        downloader._download_file = MagicMock(return_value=False)
+        
+        with patch('dwdown.download.os_download.ThreadPoolExecutor') as MockExecutor:
+            mock_executor_instance = MockExecutor.return_value
+            mock_executor_instance.__enter__.return_value = mock_executor_instance
+            mock_future = MagicMock()
+            mock_executor_instance.submit.return_value = mock_future
+            
+            with patch('dwdown.download.os_download.as_completed', return_value=[mock_future]):
+                mock_future.result.return_value = False
+                
+                # Run download
+                downloader.download()
+                
+                # Verify calls: 0 initial + 2 retries = 2 calls
+                assert downloader._download_file.call_count == 2
+                
+                # Verify result
+                assert "f1.csv" not in downloader.downloaded_files
+                assert "f1.csv" in downloader.corrupted_files

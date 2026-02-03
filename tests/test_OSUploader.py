@@ -127,3 +127,83 @@ class TestOSUploader:
         
         uploader._filehandler._delete_files_safely.assert_called_with(['file1.csv', 'file2.csv'], 'uploaded file')
         uploader._filehandler._cleanup_empty_dirs.assert_called_with('uploads')
+
+    def test_upload_retry_success(self, uploader):
+        # Configure uploader with retries
+        uploader._retry = 2
+        
+        # Mock dependencies
+        uploader._utilities = MagicMock()
+        uploader._filehandler._search_directory.return_value = ["uploads/f1.csv"]
+        uploader._utilities._flatten_list.return_value = ["uploads/f1.csv"]
+        uploader._datehandler._process_timesteps.return_value = None
+        uploader._filehandler._simple_filename_filter.return_value = ["uploads/f1.csv"]
+        uploader._filehandler._advanced_filename_filter.return_value = ["uploads/f1.csv"]
+        uploader._filehandler._calculate_md5.return_value = "hash1"
+        uploader._oshandler._fetch_existing_files.return_value = {}
+        
+        # Mock build_upload_list
+        upload_list = [("uploads/f1.csv", "remote/f1.csv", "hash1")]
+        uploader._build_upload_list = MagicMock(return_value=upload_list)
+        
+        # Mock _upload_file logic for RETRIES only
+        # Initial call is mocked via future.result() returning False
+        # Retries: Retry 1 (Fail), Retry 2 (Success)
+        uploader._upload_file = MagicMock(side_effect=[False, True])
+        
+        with patch('dwdown.upload.os_upload.ThreadPoolExecutor') as MockExecutor:
+            mock_executor_instance = MockExecutor.return_value
+            mock_executor_instance.__enter__.return_value = mock_executor_instance
+            mock_future = MagicMock()
+            mock_executor_instance.submit.return_value = mock_future
+            
+            with patch('dwdown.upload.os_upload.as_completed', return_value=[mock_future]):
+                mock_future.result.return_value = False
+                
+                uploader.upload()
+                
+                # Verify calls: 0 initial + 2 retries = 2 calls
+                assert uploader._upload_file.call_count == 2
+                
+                # Verify result
+                assert "uploads/f1.csv" in uploader.uploaded_files
+                assert "uploads/f1.csv" not in uploader.corrupted_files
+
+    def test_upload_retry_fail(self, uploader):
+        # Configure uploader with retries
+        uploader._retry = 2
+        
+        # Mock dependencies
+        uploader._utilities = MagicMock()
+        uploader._filehandler._search_directory.return_value = ["uploads/f1.csv"]
+        uploader._utilities._flatten_list.return_value = ["uploads/f1.csv"]
+        uploader._datehandler._process_timesteps.return_value = None
+        uploader._filehandler._simple_filename_filter.return_value = ["uploads/f1.csv"]
+        uploader._filehandler._advanced_filename_filter.return_value = ["uploads/f1.csv"]
+        uploader._filehandler._calculate_md5.return_value = "hash1"
+        uploader._oshandler._fetch_existing_files.return_value = {}
+        
+        # Mock build_upload_list
+        upload_list = [("uploads/f1.csv", "remote/f1.csv", "hash1")]
+        uploader._build_upload_list = MagicMock(return_value=upload_list)
+        
+        # Mock _upload_file: Always fail
+        uploader._upload_file = MagicMock(return_value=False)
+        
+        with patch('dwdown.upload.os_upload.ThreadPoolExecutor') as MockExecutor:
+            mock_executor_instance = MockExecutor.return_value
+            mock_executor_instance.__enter__.return_value = mock_executor_instance
+            mock_future = MagicMock()
+            mock_executor_instance.submit.return_value = mock_future
+            
+            with patch('dwdown.upload.os_upload.as_completed', return_value=[mock_future]):
+                mock_future.result.return_value = False
+                
+                uploader.upload()
+                
+                # Verify calls: 0 initial + 2 retries = 2 calls
+                assert uploader._upload_file.call_count == 2
+                
+                # Verify result
+                assert "uploads/f1.csv" not in uploader.uploaded_files
+                assert "uploads/f1.csv" in uploader.corrupted_files
