@@ -76,7 +76,7 @@ df = scraper.read_data(save_as_csv=True)
 print(df)
 ```
 
-### HistoricalDownloader: Fetch MOSMIX forecast data from the DWD open data server.
+### MOSMIX_Downloader: Fetch MOSMIX forecast data from the DWD open data server.
 
 ```python
 from dwdown.download import MOSMIX_Downloader
