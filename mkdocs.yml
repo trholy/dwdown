@@ -9,6 +9,8 @@ nav:
   - Download Module:
       - ForecastDownloader: download/ForecastDownloader.md
       - OSDownloader: download/OSDownloader.md
+      - MosmixDownloader: download/MosmixDownloader.md
+      - HistoricalDownloader: download/HistoricalDownloader.md
   - Notify Module:
       - Notifier: notify/Notifier.md
   - Processing Module:
