@@ -15,7 +15,7 @@ from dwdown.utils.log_handling import LogHandler
 from dwdown.utils.network_handling import SessionHandler
 
 
-class MOSMIX_Downloader:
+class MOSMIXDownloader:
     def __init__(
             self,
             mosmix_type: Literal["MOSMIX_L", "MOSMIX_S", "MOSMIX-SNOW_S"],

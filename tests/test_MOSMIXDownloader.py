@@ -3,7 +3,7 @@ import requests
 import responses
 from unittest.mock import patch
 
-from dwdown.download import MOSMIX_Downloader
+from dwdown.download import MOSMIXDownloader
 
 TEST_URL_BASE = "https://opendata.dwd.de/weather/local_forecasts/mos/"
 
@@ -40,7 +40,7 @@ def downloader(tmp_path, mock_handlers):
     extracted_dir.mkdir()
     logs_dir.mkdir()
 
-    return MOSMIX_Downloader(
+    return MOSMIXDownloader(
         mosmix_type="MOSMIX_L",
         files_path=str(downloads_dir),
         extracted_files_path=str(extracted_dir),
@@ -74,7 +74,7 @@ def test_get_links_mosmix_l_single_station(downloader):
 @responses.activate
 def test_get_links_mosmix_s_all_stations(tmp_path, mock_handlers):
     # Test for MOSMIX_S (all stations)
-    downloader = MOSMIX_Downloader(
+    downloader = MOSMIXDownloader(
         mosmix_type="MOSMIX_S",
         files_path=str(tmp_path/"downloads"),
         extracted_files_path=str(tmp_path/"extracted"),

@@ -6,7 +6,7 @@
 
 - **ForecastDownloader**: Fetch weather forecast data from the DWD open data server.
 - **HistoricalDownloader**: Fetch historical observation data from the DWD open data server.
-- **MOSMIX_Downloader**: Fetch MOSMIX forecast data from the DWD open data server.
+- **MOSMIXDownloader**: Fetch MOSMIX forecast data from the DWD open data server.
 - **OSDownloader**: Download files from a S3 compatible / [MinIO object storage server](https://github.com/minio/minio).
 - **OSUploader**: Upload downloaded data to a S3 compatible / MinIO object storage server with parallel uploads and data integrity checks.
 - **GribFileManager**: Extract BZ2 archives and convert GRIB2 files to CSV format.
@@ -76,22 +76,22 @@ df = scraper.read_data(save_as_csv=True)
 print(df)
 ```
 
-### MOSMIX_Downloader: Fetch MOSMIX forecast data from the DWD open data server.
+### MOSMIXDownloader: Fetch MOSMIX forecast data from the DWD open data server.
 
 ```python
-from dwdown.download import MOSMIX_Downloader
+from dwdown.download import MOSMIXDownloader
 
-
-# Initialize MOSMIX_Downloader
-scraper = MOSMIX_Downloader(
-    mosmix_type="MOSMIX_L",              
-    base_url=None,                       # Base URL constructed automatically based on type
-    files_path=None,                     # Path for downloaded files (defaults to download_files)
-    extracted_files_path=None,           # Path for extracted files (defaults to extracted_files)
-    log_files_path="log_files",          # Path for log files
-    delay=1,                             # 1 second delay between downloads
-    retry=0,                             # Don't retry failed downloads
-    timeout=30                           # 30 second timeout for requests
+# Initialize MOSMIXDownloader
+scraper = MOSMIXDownloader(
+    mosmix_type="MOSMIX_L",
+    base_url=None,  # Base URL constructed automatically based on type
+    files_path=None,  # Path for downloaded files (defaults to download_files)
+    extracted_files_path=None,
+    # Path for extracted files (defaults to extracted_files)
+    log_files_path="log_files",  # Path for log files
+    delay=1,  # 1 second delay between downloads
+    retry=0,  # Don't retry failed downloads
+    timeout=30  # 30 second timeout for requests
 )
 
 # Get download links for specific stations
@@ -384,7 +384,7 @@ The package structure is as follows:
 │       │   ├── __init__.py
 │       │   ├── forecast_download.py
 │       │   ├── historical_download.py
-│       │   ├── mosmix_downloader.py
+│       │   ├── mosmix_download.py
 │       │   └── os_download.py
 │       ├── notify
 │       │   ├── __init__.py
@@ -408,7 +408,7 @@ The package structure is as follows:
 └── tests
     ├── test_ForecastDownloader.py
     ├── test_HistoricalDownloader.py
-    ├── test_MOSMIX_Downloader.py
+    ├── test_MOSMIXDownloader.py
     ├── test_OSDownloader.py
     ├── test_OSUploader.py
     ├── test_date_time_utilis.py

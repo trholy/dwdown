@@ -1,8 +1,8 @@
-from dwdown.download import MOSMIX_Downloader
+from dwdown.download import MOSMIXDownloader
 
 # Initialize MOSMIX_Downloader
 # mosmix_type can be "MOSMIX_L" (single stations available) or "MOSMIX_S" (all stations)
-scraper = MOSMIX_Downloader(
+scraper = MOSMIXDownloader(
     mosmix_type="MOSMIX_L",              
     base_url=None,                       # Base URL constructed automatically based on type
     files_path=None,                     # Path for downloaded files (defaults to download_files)

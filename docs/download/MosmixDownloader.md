@@ -1,14 +1,14 @@
 # Download module
-## MOSMIX_Downloader
+## MOSMIXDownloader
 
 ### Overview
 
-The `MOSMIX_Downloader` class is responsible for downloading and extracting MOSMIX forecast data (MOSMIX_L, MOSMIX_S, MOSMIX-SNOW_S) from the DWD (Deutscher Wetterdienst) Open Data server.
+The `MOSMIXDownloader` class is responsible for downloading and extracting MOSMIX forecast data (MOSMIX_L, MOSMIX_S, MOSMIX-SNOW_S) from the DWD (Deutscher Wetterdienst) Open Data server.
 
 ### Constructor
 
 ```python
-MOSMIX_Downloader(
+MOSMIXDownloader(
     mosmix_type: Literal["MOSMIX_L", "MOSMIX_S", "MOSMIX-SNOW_S"],
     base_url: str | None = None,
     files_path: str | None = None,
