@@ -10,10 +10,10 @@ TEST_URL_BASE = "https://opendata.dwd.de/weather/local_forecasts/mos/"
 @pytest.fixture
 def mock_handlers():
     """Mock the handlers used by MOSMIX_Downloader."""
-    with patch("dwdown.download.mosmix_downloader.SessionHandler") as MockSessionHandler, \
-         patch("dwdown.download.mosmix_downloader.LogHandler") as MockLogHandler, \
-         patch("dwdown.download.mosmix_downloader.FileHandler") as MockFileHandler, \
-         patch("dwdown.download.mosmix_downloader.TimeHandler") as MockTimeHandler:
+    with patch("dwdown.download.mosmix_download.SessionHandler") as MockSessionHandler, \
+         patch("dwdown.download.mosmix_download.LogHandler") as MockLogHandler, \
+         patch("dwdown.download.mosmix_download.FileHandler") as MockFileHandler, \
+         patch("dwdown.download.mosmix_download.TimeHandler") as MockTimeHandler:
         
         # Setup SessionHandler to return a REAL session so 'responses' works
         session_instance = MockSessionHandler.return_value
@@ -30,7 +30,7 @@ def mock_handlers():
 @pytest.fixture
 def downloader(tmp_path, mock_handlers):
     """
-    Creates a MOSMIX_Downloader instance with temporary paths.
+    Creates a MOSMIXDownloader instance with temporary paths.
     """
     downloads_dir = tmp_path / "downloads"
     extracted_dir = tmp_path / "extracted"
