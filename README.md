@@ -425,10 +425,6 @@ The package structure is as follows:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
-## Authors & Maintainers
-
-- Thomas R. Holy, Ernst-Abbe-Hochschule Jena
-
 ## Contributing
 
 Feel free to contribute to the development of `dwdown`!
